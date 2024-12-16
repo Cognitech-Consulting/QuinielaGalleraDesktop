@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Actualizar Resultado</title>
+</head>
+<body>
+    <h1>Actualizar Resultado</h1>
+    <p>Pelea: <strong>{{ pelea.equipo1 }}</strong> vs <strong>{{ pelea.equipo2 }}</strong></p>
+    <form method="post">
+        {% csrf_token %}
+        <label for="resultado">Resultado:</label>
+        <select name="resultado" id="resultado" required>
+            <option value="equipo1" {% if pelea.resultado == 'equipo1' %}selected{% endif %}>Equipo 1 Ganó</option>
+            <option value="equipo2" {% if pelea.resultado == 'equipo2' %}selected{% endif %}>Equipo 2 Ganó</option>
+            <option value="tie" {% if pelea.resultado == 'tie' %}selected{% endif %}>Empate</option>
+        </select>
+        <button type="submit">Guardar</button>
+    </form>
+    <a href="{% url 'detalle_evento' pelea.ronda.evento.id %}">Volver al Evento</a>
+</body>
+</html>

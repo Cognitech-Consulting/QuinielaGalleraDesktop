@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detalle de Evento</title>
+    <style>
+        /* General styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+        }
+
+        /* Styles for dashboard layout */
+        .dashboard-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .round-card {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            padding: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .round-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .match-item {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Add buttons */
+        .add-button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-decoration: none;
+        }
+
+        .add-button:hover {
+            background-color: #2980b9;
+        }
+
+        /* Update result button */
+        .update-button {
+            background-color: #2ecc71;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9em;
+        }
+
+        .update-button:hover {
+            background-color: #27ae60;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Event Header -->
+        <div class="event-header">
+            <h1>{{ evento.nombre }}</h1>
+            <a href="{% url 'add_round' evento.id %}" class="add-button">Añadir Ronda</a>
+        </div>
+
+        <!-- Rounds and Matches -->
+        {% for ronda in rondas %}
+        <div class="round-card">
+            <div class="round-header">
+                <h2>Ronda {{ ronda.numero }}</h2>
+                <a href="{% url 'add_match' ronda.id %}" class="add-button">Añadir Pelea</a>
+            </div>
+            <div>
+                {% for pelea in ronda.peleas.all %}
+                <div class="match-item">
+                    <span>{{ pelea.equipo1 }} vs {{ pelea.equipo2 }}</span>
+                    {% if pelea.resultado %}
+                        <span>Ganador:
+                            {% if pelea.resultado == 'equipo1' %}
+                                {{ pelea.equipo1 }}
+                            {% elif pelea.resultado == 'equipo2' %}
+                                {{ pelea.equipo2 }}
+                            {% else %}
+                                Empate
+                            {% endif %}
+                        </span>
+                    {% else %}
+                        <span>Ganador: No definido</span>
+                    {% endif %}
+                    <a href="{% url 'update_result' pelea.id %}" class="update-button">Actualizar Resultado</a>
+                </div>
+                {% empty %}
+                <p>No hay peleas en esta ronda.</p>
+                {% endfor %}
+            </div>
+        </div>
+        {% empty %}
+        <p>No hay rondas para este evento.</p>
+        {% endfor %}
+    </div>
+</body>
+</html>
+

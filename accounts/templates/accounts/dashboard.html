@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Control - Quiniela Gallera</title>
+    <style>
+        /* Basic styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+        }
+
+        /* Navbar styling */
+        .navbar {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 20px;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        /* Button styling */
+        .dashboard-container {
+            padding: 40px;
+            text-align: center;
+        }
+
+        .dashboard-container h1 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-container p {
+            font-size: 1.2em;
+            color: #7f8c8d;
+            max-width: 600px;
+            margin: 0 auto 30px;
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .button-group a {
+            display: inline-block;
+            padding: 15px 30px;
+            color: #ffffff;
+            background-color: #3498db;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.2em;
+            transition: background-color 0.3s;
+        }
+
+        .button-group a:hover {
+            background-color: #2980b9;
+        }
+
+        .button-group a.usuarios {
+            background-color: #2ecc71;
+        }
+
+        .button-group a.usuarios:hover {
+            background-color: #27ae60;
+        }
+
+        .button-group a.eventos {
+            background-color: #e74c3c;
+        }
+
+        .button-group a.eventos:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">Quiniela Gallera Dash</div>
+    </nav>
+
+    <!-- Dashboard Content -->
+    <div class="dashboard-container">
+        <h1>Bienvenido al Panel de Control</h1>
+        <p>Seleccione una sección a continuación para gestionar Usuarios, Eventos, Rondas y Partidos.</p>
+
+        <!-- Buttons for each category -->
+        <div class="button-group">
+            <a href="{% url 'accounts:manage_users' %}" class="usuarios">Usuarios</a>
+            <a href="{% url 'listar_eventos' %}">Eventos</a>
+
+        </div>
+    </div>
+</body>
+</html>

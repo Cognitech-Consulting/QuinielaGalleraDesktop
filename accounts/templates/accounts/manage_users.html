@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Usuarios</title>
+    <style>
+        /* General Styles */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        /* Navbar Styles */
+        .navbar {
+            background-color: #333;
+            color: #fff;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .navbar-links {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            gap: 15px;
+        }
+
+        .navbar-links a {
+            color: #fff;
+            text-decoration: none;
+            font-size: 18px;
+        }
+
+        .navbar-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Dashboard Container */
+        .dashboard-container {
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Table Styles */
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #fff;
+            margin: 20px 0;
+        }
+
+        .user-table th, .user-table td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .user-table th {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .user-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Button Styles */
+        form {
+            display: inline;
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            margin: 2px;
+            cursor: pointer;
+            font-size: 14px;
+            border-radius: 4px;
+        }
+
+        button[type="submit"][name="action"][value="subtract"] {
+            background-color: #d9534f;
+        }
+
+        button[type="submit"]:hover {
+            opacity: 0.8;
+        }
+
+        /* Messages Section */
+        .messages {
+            margin: 20px auto;
+            width: 90%;
+            text-align: center;
+        }
+
+        .messages .message {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .messages .message.success {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .messages .message.warning {
+            background-color: #ff9800;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-brand">QuinielaGalleraDash</div>
+        <ul class="navbar-links">
+            <li><a href="{% url 'accounts:manage_users' %}">Usuarios</a></li>
+        </ul>
+    </nav>
+
+    <!-- Messages Section -->
+    {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+                <p class="message {{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Users Table -->
+    <div class="dashboard-container">
+        <h1>Gestionar Usuarios</h1>
+        <table class="user-table">
+            <thead>
+                <tr>
+                    <th>ID de Usuario</th>
+                    <th>Nombre</th>
+                    <th>Email</th>
+                    <th>Número de Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Tickets de Evento</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                    <tr>
+                        <td>{{ user.user_id }}</td>
+                        <td>{{ user.nombre }} {{ user.apellido }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>{{ user.numero_celular }}</td>
+                        <td>{{ user.direccion }}</td>
+                        <td>{{ user.event_tickets }}</td>
+                        <td>
+                            <!-- Add and Subtract Buttons -->
+                            <form method="post" action="{% url 'accounts:update_tickets' user.user_id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="add">Añadir</button>
+                            </form>
+                            <form method="post" action="{% url 'accounts:update_tickets' user.user_id %}">
+                                {% csrf_token %}
+                                <button type="submit" name="action" value="subtract">Restar</button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7">No se encontraron usuarios.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
