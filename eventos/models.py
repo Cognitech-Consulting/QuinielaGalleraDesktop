@@ -60,3 +60,14 @@ class EventoUserResult(models.Model):
 
     def __str__(self):
         return f"{self.user.user_id} - {self.evento.nombre}: {self.total_points} points"
+
+
+
+class NombreEquipo(models.Model):
+    evento = models.ForeignKey(Evento, on_delete=models.CASCADE, related_name='equipos')
+    nombre = models.CharField(max_length=100)
+    valor = models.PositiveIntegerField()
+
+    class Meta:
+        unique_together = ('evento', 'valor')
+

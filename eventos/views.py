@@ -1,14 +1,18 @@
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
-from .models import Evento, Ronda, Pelea, Prediccion
-from .forms import EventoForm
+from .models import Evento, Ronda, Pelea, Prediccion, NombreEquipo
+from .forms import EventoForm, NombreEquipoForm
 from django.views.decorators.csrf import csrf_exempt
 from accounts.models import CustomUser
 import logging
 import json
 from .models import EventoUserResult
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+from django.contrib import messages
+
+
 
 
 
@@ -18,8 +22,21 @@ logger = logging.getLogger('eventos')
 # View to list events
 @login_required
 def listar_eventos(request):
-    eventos = Evento.objects.all()
-    return render(request, 'eventos/listar_eventos.html', {'eventos': eventos})
+    search_query = request.GET.get('search', '')  # Get the search query from the request
+    eventos = Evento.objects.all()  # Retrieve all events
+
+    if search_query:
+        # Filter events by nombre or fecha (case-insensitive)
+        eventos = eventos.filter(
+            Q(nombre__icontains=search_query) |
+            Q(fecha__icontains=search_query)
+        )
+
+    return render(request, 'eventos/listar_eventos.html', {
+    'eventos': eventos,
+    'search': search_query  # Add this line
+})
+
 
 # View to display event details with rounds and matches
 @login_required
@@ -29,60 +46,87 @@ def detalle_evento(request, evento_id):
     return render(request, 'eventos/detalle_evento.html', {'evento': evento, 'rondas': rondas})
 
 # Function to create a new event with dynamic rounds and matches
+
 @login_required
 def crear_evento(request):
     if request.method == "POST":
-        print(f"Received POST data: {request.POST}")
+        nombre = request.POST.get('nombre')
+        fecha = request.POST.get('fecha')
+        ubicacion = request.POST.get('ubicacion')
 
-        # Create the main Evento object
-        evento = Evento.objects.create(
-            nombre=request.POST['nombre'],
-            fecha=request.POST['fecha'],
-            ubicacion=request.POST['ubicacion']
-        )
-        print(f"Evento created: {evento.nombre}")
+        if nombre and fecha and ubicacion:
+            evento = Evento.objects.create(
+                nombre=nombre,
+                fecha=fecha,
+                ubicacion=ubicacion
+            )
 
-        # Parse rounds and matches
+            # Procesar equipos enviados desde el formulario
+            index = 0
+            while True:
+                valor_key = f'equipo_valor_{index}'
+                nombre_key = f'equipo_nombre_{index}'
+                valor = request.POST.get(valor_key)
+                nombre_equipo = request.POST.get(nombre_key)
+                if not valor or not nombre_equipo:
+                    break
+                NombreEquipo.objects.create(evento=evento, valor=valor, nombre=nombre_equipo)
+                index += 1
+
+            return redirect('crear_rondas', evento_id=evento.id)
+
+    return render(request, 'eventos/crear_evento.html')
+
+@login_required
+def crear_rondas(request, evento_id):
+    evento = get_object_or_404(Evento, id=evento_id)
+
+    if request.method == "POST":
         rounds_data = {}
+
         for key, value in request.POST.items():
             if key.startswith("equipo1-round-") or key.startswith("equipo2-round-"):
                 try:
-                    # Key structure: equipo1-round-{round_number}-match-{match_number}
                     parts = key.split('-')
-                    round_number = int(parts[2])  # Extract the round number
-                    match_number = int(parts[4])  # Extract the match number
+                    round_number = int(parts[2])
+                    match_number = int(parts[4])
 
                     if round_number not in rounds_data:
                         rounds_data[round_number] = {}
-
                     if match_number not in rounds_data[round_number]:
                         rounds_data[round_number][match_number] = {}
 
+                    # Ensure correct data type matching
+                    valor_int = int(value)
+                    nombre_equipo = NombreEquipo.objects.get(evento_id=evento_id, valor=valor_int).nombre
+
                     if key.startswith("equipo1-"):
-                        rounds_data[round_number][match_number]['equipo1'] = value
+                        rounds_data[round_number][match_number]['equipo1'] = nombre_equipo
                     elif key.startswith("equipo2-"):
-                        rounds_data[round_number][match_number]['equipo2'] = value
-                except ValueError as e:
-                    print(f"Error parsing key '{key}': {e}")
+                        rounds_data[round_number][match_number]['equipo2'] = nombre_equipo
+
+                except Exception as e:
+                    print(f"Error processing match key={key}: {e}")
                     continue
 
-        print(f"Parsed rounds data: {rounds_data}")
-
-        # Save rounds and matches
         for round_number, matches in rounds_data.items():
             ronda = Ronda.objects.create(evento=evento, numero=round_number)
-            print(f"Ronda created: {ronda.numero}")
             for match_number, teams in matches.items():
                 Pelea.objects.create(
                     ronda=ronda,
                     equipo1=teams['equipo1'],
                     equipo2=teams['equipo2']
                 )
-                print(f"Pelea created: {teams['equipo1']} vs {teams['equipo2']}")
 
-        return redirect('listar_eventos')
+        return redirect('detalle_evento', evento_id=evento.id)
 
-    return render(request, 'eventos/crear_evento.html')
+    return render(request, 'eventos/crear_ronda.html', {
+        'evento': evento,
+        'equipos_url': reverse('gestionar_equipos', args=[evento.id])
+    })
+
+
+
 # Function to add a new round to an existing event
 def add_round(request, evento_id):
     evento = get_object_or_404(Evento, id=evento_id)
@@ -108,7 +152,7 @@ def update_result(request, pelea_id):
     pelea = get_object_or_404(Pelea, id=pelea_id)
     if request.method == "POST":
         resultado = request.POST.get("resultado")
-        if resultado in ['equipo1', 'equipo2', 'tie']:
+        if resultado in ['equipo1', 'equipo2', 'empate']:
             pelea.resultado = resultado
             pelea.save()
 
@@ -299,7 +343,7 @@ def get_user_results(request):
 
 @csrf_exempt
 def toggle_results_visibility(request, evento_id):
-    if request.method == 'POST':
+    if request.method in ['GET', 'POST']:
         try:
             evento = Evento.objects.get(id=evento_id)
             evento.results_visible = not evento.results_visible
@@ -337,7 +381,7 @@ def get_rankings(request, evento_id):
 
 @csrf_exempt
 def toggle_ranking_visibility(request, evento_id):
-    if request.method == 'POST':
+    if request.method in ['GET', 'POST']:
         try:
             evento = Evento.objects.get(id=evento_id)
             evento.ranking_visible = not evento.ranking_visible
@@ -353,3 +397,74 @@ def toggle_ranking_visibility(request, evento_id):
             return JsonResponse({'error': str(e)}, status=400)
 
     return JsonResponse({'error': 'Invalid method.'}, status=405)
+
+@login_required
+def gestionar_equipos(request, evento_id):
+    evento = get_object_or_404(Evento, id=evento_id)
+    equipos = NombreEquipo.objects.filter(evento=evento)
+
+    if request.method == 'POST':
+        form = NombreEquipoForm(request.POST)
+        if form.is_valid():
+            nuevo_equipo = form.save(commit=False)
+            nuevo_equipo.evento = evento
+            nuevo_equipo.save()
+            messages.success(request, 'Equipo añadido correctamente.')
+            return redirect('gestionar_equipos', evento_id=evento.id)
+    else:
+        form = NombreEquipoForm()
+
+    return render(request, 'eventos/gestionar_equipos.html', {
+        'evento': evento,
+        'equipos': equipos,
+        'form': form,
+    })
+
+def get_team_name(request):
+    valor = request.GET.get('valor')
+
+    if not valor:
+        return JsonResponse({'error': 'Falta valor'}, status=400)
+
+    try:
+        valor_int = int(valor)
+    except ValueError:
+        return JsonResponse({'error': 'Valor debe ser numérico'}, status=400)
+
+    try:
+        equipo = NombreEquipo.objects.get(valor=valor_int)
+        return JsonResponse({'nombre': equipo.nombre})
+    except NombreEquipo.DoesNotExist:
+        return JsonResponse({'error': 'Equipo no encontrado'}, status=404)
+
+def obtener_nombre_equipo(request, evento_id):
+    valor = request.GET.get('valor')
+    if not valor:
+        return JsonResponse({'error': 'Falta valor'}, status=400)
+
+    try:
+        equipo = NombreEquipo.objects.get(evento_id=evento_id, valor=valor)
+        return JsonResponse({'nombre': equipo.nombre})
+    except NombreEquipo.DoesNotExist:
+        return JsonResponse({'error': 'Equipo no encontrado'}, status=404)
+
+
+@csrf_exempt
+def buscar_equipo_global(request):
+    valor = request.GET.get('valor')
+
+    if not valor:
+        return JsonResponse({'error': 'Falta valor'}, status=400)
+
+    try:
+        valor_int = int(valor)
+    except ValueError:
+        return JsonResponse({'error': 'Valor debe ser numérico'}, status=400)
+
+    try:
+        equipo = NombreEquipo.objects.get(valor=valor_int)
+        return JsonResponse({'nombre': equipo.nombre})
+    except NombreEquipo.DoesNotExist:
+        return JsonResponse({'error': 'Equipo no encontrado'}, status=404)
+
+

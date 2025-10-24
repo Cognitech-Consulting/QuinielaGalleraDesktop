@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear Rondas y Peleas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      padding: 20px;
+      margin: 0;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+    }
+    .button {
+      margin: 10px 0;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .button:hover {
+      background-color: #2980b9;
+    }
+    .round, .match {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    input[type="text"] {
+      padding: 8px;
+      margin: 5px;
+      width: 45%;
+    }
+    .team-name {
+      margin-left: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Crear Rondas para: {{ evento.nombre }}</h1>
+    <a href="{% url 'gestionar_equipos' evento.id %}" class="button">Gestionar Equipos</a>
+    <form method="post">
+      {% csrf_token %}
+      <div id="roundContainer"></div>
+      <button type="button" class="button" onclick="addRound()">Agregar Ronda</button>
+      <button type="submit" class="button">Guardar</button>
+    </form>
+  </div>
+
+  <script>
+    const eventoId = {{ evento.id }};  // Make event ID available to JS
+
+    let roundCount = 0;
+
+    function addRound() {
+      roundCount++;
+      const roundId = `round-${roundCount}`;
+      const roundDiv = document.createElement('div');
+      roundDiv.className = 'round';
+      roundDiv.innerHTML = `
+        <h3>Ronda ${roundCount}</h3>
+        <div id="matches-${roundId}"></div>
+        <button type="button" class="button" onclick="addMatch('${roundId}')">Agregar Pelea</button>
+      `;
+      document.getElementById('roundContainer').appendChild(roundDiv);
+    }
+
+    function addMatch(roundId) {
+      const matchContainer = document.getElementById(`matches-${roundId}`);
+      const matchCount = matchContainer.childElementCount + 1;
+      const equipo1Id = `equipo1-${roundId}-match-${matchCount}`;
+      const equipo2Id = `equipo2-${roundId}-match-${matchCount}`;
+      const label1Id = `label-${roundId}-match-${matchCount}-e1`;
+      const label2Id = `label-${roundId}-match-${matchCount}-e2`;
+
+      const matchDiv = document.createElement('div');
+      matchDiv.className = 'match';
+      matchDiv.innerHTML = `
+        <label>Pelea ${matchCount}</label><br>
+        <input type="text" name="${equipo1Id}" placeholder="Equipo 1 (valor)" onblur="fetchTeamName(this, '${label1Id}')">
+        <span id="${label1Id}" class="team-name"></span><br>
+        <input type="text" name="${equipo2Id}" placeholder="Equipo 2 (valor)" onblur="fetchTeamName(this, '${label2Id}')">
+        <span id="${label2Id}" class="team-name"></span>
+      `;
+      matchContainer.appendChild(matchDiv);
+    }
+
+    function fetchTeamName(inputElement, labelId) {
+      const rawValor = inputElement.value.trim();
+      const valor = rawValor.split(':')[0];
+
+      const label = document.getElementById(labelId);
+
+      if (!valor) {
+        label.textContent = '';
+        label.style.color = '';
+        return;
+      }
+
+      fetch(`/eventos/api/evento/${eventoId}/equipo-nombre/?valor=${valor}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then(data => {
+          if (data.nombre) {
+            label.textContent = `→ ${data.nombre}`;
+            label.style.color = "#27ae60";
+          } else {
+            label.textContent = '⚠ No encontrado';
+            label.style.color = "#e74c3c";
+          }
+        })
+        .catch(error => {
+          console.error("Error fetching team name:", error);
+          label.textContent = '⚠ Error';
+          label.style.color = "#e74c3c";
+        });
+    }
+  </script>
+</body>
+</html>

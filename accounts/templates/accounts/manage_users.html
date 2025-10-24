@@ -57,6 +57,34 @@
             margin-bottom: 20px;
         }
 
+        /* Search Bar Styles */
+        .search-bar {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input[type="text"] {
+            padding: 10px;
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
+        .search-bar button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .search-bar button:hover {
+            background-color: #0056b3;
+        }
+
         /* Table Styles */
         .user-table {
             width: 100%;
@@ -104,28 +132,23 @@
             opacity: 0.8;
         }
 
-        /* Messages Section */
-        .messages {
-            margin: 20px auto;
-            width: 90%;
+        /* Back Button */
+        .back-button {
             text-align: center;
+            margin-top: 20px;
         }
 
-        .messages .message {
-            padding: 10px;
-            margin: 10px 0;
+        .back-button a {
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            text-decoration: none;
             border-radius: 5px;
             font-size: 16px;
         }
 
-        .messages .message.success {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .messages .message.warning {
-            background-color: #ff9800;
-            color: white;
+        .back-button a:hover {
+            background-color: #5a6268;
         }
     </style>
 </head>
@@ -147,9 +170,17 @@
         </div>
     {% endif %}
 
-    <!-- Users Table -->
+    <!-- Search Bar -->
     <div class="dashboard-container">
         <h1>Gestionar Usuarios</h1>
+        <div class="search-bar">
+            <form method="get" action="{% url 'accounts:manage_users' %}">
+                <input type="text" name="search" placeholder="Buscar ID o Número de Teléfono" value="{{ request.GET.search }}">
+                <button type="submit">Buscar</button>
+            </form>
+        </div>
+
+        <!-- Users Table -->
         <table class="user-table">
             <thead>
                 <tr>
@@ -190,6 +221,11 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+
+    <!-- Back Button -->
+    <div class="back-button">
+        <a href="https://cognitech.pythonanywhere.com/api/accounts/dashboard/">Volver</a>
     </div>
 </body>
 </html>

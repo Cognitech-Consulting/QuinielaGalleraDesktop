@@ -42,8 +42,10 @@ INSTALLED_APPS = [
     'rest_framework',
     'accounts',
     'eventos',
-    'authapp'
+    'authapp',
 ]
+
+WSGI_APPLICATION = 'QuinielaGalleraDash.wsgi.application'
 
 LOGIN_URL = '/auth/login/'
 LOGIN_REDIRECT_URL = '/eventos/'

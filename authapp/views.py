@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 
 def login_view(request):
+    error = None  # Always define the error variable
+
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
@@ -11,9 +13,9 @@ def login_view(request):
             login(request, user)
             return redirect('accounts:dashboard')  # Redirect to the dashboard
         else:
-            return render(request, 'authapp/login.html', {'error': 'Invalid username or password'})
-    return render(request, 'authapp/login.html')
+            error = 'Usuario o contraseña inválidos.'
 
+    return render(request, 'authapp/login.html', {'error': error})
 
 
 def logout_view(request):

@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.middleware.csrf import get_token
+from django.db.models import Q
 import json
 
 
@@ -60,9 +61,17 @@ def dashboard(request):
 
 @login_required
 def manage_users(request):
+    search_query = request.GET.get('search', '')  # Get the search query from the request
     users = CustomUser.objects.all()
-    return render(request, 'accounts/manage_users.html', {'users': users})
 
+    # Filter users based on search query
+    if search_query:
+        users = users.filter(
+            Q(user_id__icontains=search_query) |  # Match user_id
+            Q(numero_celular__icontains=search_query)  # Match phone number
+        )
+
+    return render(request, 'accounts/manage_users.html', {'users': users})
 @login_required
 def update_tickets(request, user_id):
     user = get_object_or_404(CustomUser, user_id=user_id)

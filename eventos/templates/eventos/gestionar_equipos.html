@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Equipos del Evento</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    h1, h2 {
+      color: #2c3e50;
+    }
+
+    form {
+      margin-bottom: 30px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .current-button {
+      background-color: #2ecc71;
+    }
+
+    .current-button:hover {
+      background-color: #27ae60;
+    }
+
+    .back-button {
+      background-color: #6c757d;
+    }
+
+    .back-button:hover {
+      background-color: #5a6268;
+    }
+
+    .next-button {
+      background-color: #3498db;
+      margin-left: 10px;
+    }
+
+    .next-button:hover {
+      background-color: #2980b9;
+    }
+
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    li {
+      padding: 8px 0;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .messages {
+      background-color: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+      padding: 10px 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    {% if messages %}
+      <div class="messages">
+        {% for message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    <h1>Equipos para: {{ evento.nombre }}</h1>
+
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button type="submit" class="button current-button">Agregar Equipo</button>
+    </form>
+
+    <h2>Equipos Inscritos:</h2>
+    <ul>
+      {% for equipo in equipos %}
+        <li><strong>#{{ equipo.valor }}</strong> - {{ equipo.nombre }}</li>
+      {% empty %}
+        <li>No hay equipos aún.</li>
+      {% endfor %}
+    </ul>
+
+    <a href="{% url 'listar_eventos' %}" class="button back-button">Volver a Eventos</a>
+    <a href="{% url 'crear_rondas' evento.id %}" class="button next-button">Continuar a Rondas</a>
+  </div>
+</body>
+</html>
