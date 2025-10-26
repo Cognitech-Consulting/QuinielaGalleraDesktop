@@ -244,6 +244,11 @@
             border-color: #9ca3af;
         }
 
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        }
+
         .button-group {
             display: flex;
             flex-wrap: wrap;
@@ -315,6 +320,17 @@
             box-shadow: 0 6px 0 #dc2626;
         }
 
+        .delete-event-button {
+            background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+            color: white;
+            box-shadow: 0 4px 0 #7f1d1d;
+        }
+
+        .delete-event-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #7f1d1d;
+        }
+
         button:active, .button:active {
             transform: translateY(1px);
             box-shadow: 0 2px 0 currentColor;
@@ -353,6 +369,134 @@
             box-shadow: 0 2px 0 #000000;
         }
 
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            border: 3px solid #000000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2em;
+            color: #000000;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .event-name-highlight {
+            font-weight: 900;
+            color: #ef4444;
+            font-size: 1.2em;
+        }
+
+        .modal-warning {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .modal-cancel, .modal-confirm {
+            flex: 1;
+            padding: 15px 30px;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .modal-cancel {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 4px 0 #000000;
+        }
+
+        .modal-cancel:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #000000;
+        }
+
+        .modal-confirm {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 0 #7f1d1d;
+        }
+
+        .modal-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #7f1d1d;
+        }
+
+        .modal-cancel:active, .modal-confirm:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 0 currentColor;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .page-header h1 {
@@ -386,6 +530,10 @@
             .button {
                 width: 100%;
                 text-align: center;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
             }
         }
     </style>
@@ -458,6 +606,11 @@
                     <a href="{% url 'gestionar_equipos' evento.id %}" class="button equipos-button">
                         🏅 Equipos
                     </a>
+
+                    <button type="button" class="button delete-event-button" 
+                            onclick="confirmDeleteEvent('{{ evento.id }}', '{{ evento.nombre }}')">
+                        🗑️ Eliminar
+                    </button>
                 </div>
             </li>
             {% endfor %}
@@ -466,6 +619,38 @@
         <!-- Back Button -->
         <div class="back-button">
             <a href="https://cognitech.pythonanywhere.com/api/accounts/dashboard/">← Volver al Dashboard</a>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">⚠️</div>
+                <h2 class="modal-title">¿Eliminar Evento?</h2>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro que deseas eliminar el evento</p>
+                <p class="event-name-highlight" id="eventNameToDelete"></p>
+                <div class="modal-warning">
+                    ⚠️ <strong>¡ADVERTENCIA!</strong> Esta acción no se puede deshacer.
+                    <br>• Se eliminarán todas las rondas
+                    <br>• Se eliminarán todas las peleas
+                    <br>• Se eliminarán todas las predicciones
+                    <br>• Se eliminarán todos los resultados
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-cancel" onclick="closeModal()">
+                    Cancelar
+                </button>
+                <form id="deleteForm" method="post" style="display: inline; flex: 1;">
+                    {% csrf_token %}
+                    <button type="submit" class="modal-confirm" style="width: 100%;">
+                        Sí, Eliminar
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -493,6 +678,35 @@
                 alert('Error al cambiar la visibilidad del ranking.');
             });
         }
+
+        function confirmDeleteEvent(eventoId, eventoNombre) {
+            const modal = document.getElementById('deleteModal');
+            const form = document.getElementById('deleteForm');
+            const nameSpan = document.getElementById('eventNameToDelete');
+            
+            nameSpan.textContent = eventoNombre;
+            form.action = `/eventos/eventos/delete/${eventoId}/`;
+            modal.classList.add('show');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('deleteModal');
+            modal.classList.remove('show');
+        }
+
+        // Close modal on outside click
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
     </script>
 </body>
 </html>

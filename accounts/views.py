@@ -137,3 +137,20 @@ def use_ticket(request):
 
 def csrf_token_view(request):
     return JsonResponse({'csrfToken': get_token(request)})
+
+
+@login_required
+def delete_user(request, user_id):
+    """Delete a user from the system"""
+    if request.method == "POST":
+        try:
+            user = get_object_or_404(CustomUser, user_id=user_id)
+            user_name = f"{user.nombre} {user.apellido}" if user.nombre else user.user_id
+            user.delete()
+            messages.success(request, f"Usuario {user_name} eliminado exitosamente")
+        except Exception as e:
+            messages.error(request, f"Error al eliminar usuario: {str(e)}")
+
+        return redirect('accounts:manage_users')
+
+    return redirect('accounts:manage_users')

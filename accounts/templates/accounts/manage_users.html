@@ -108,6 +108,12 @@
             border-color: #f59e0b;
         }
 
+        .message.error {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #ef4444;
+        }
+
         /* Page header */
         .page-header {
             background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
@@ -239,6 +245,7 @@
         .action-buttons {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .action-buttons button {
@@ -266,12 +273,23 @@
         }
 
         .action-buttons button[name="action"][value="subtract"] {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            color: white;
+            box-shadow: 0 3px 0 #b45309;
+        }
+
+        .action-buttons button[name="action"][value="subtract"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 0 #b45309;
+        }
+
+        .delete-user-btn {
             background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
             box-shadow: 0 3px 0 #7f1d1d;
         }
 
-        .action-buttons button[name="action"][value="subtract"]:hover {
+        .delete-user-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 0 #7f1d1d;
         }
@@ -347,6 +365,134 @@
             letter-spacing: 2px;
         }
 
+        /* Modal styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            border: 3px solid #000000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2em;
+            color: #000000;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .modal-body {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .user-name-highlight {
+            font-weight: 900;
+            color: #ef4444;
+            font-size: 1.2em;
+        }
+
+        .modal-warning {
+            background: #fee2e2;
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: #dc2626;
+            font-weight: 600;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .modal-cancel, .modal-confirm {
+            flex: 1;
+            padding: 15px 30px;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        .modal-cancel {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 4px 0 #000000;
+        }
+
+        .modal-cancel:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #000000;
+        }
+
+        .modal-confirm {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 4px 0 #7f1d1d;
+        }
+
+        .modal-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #7f1d1d;
+        }
+
+        .modal-cancel:active, .modal-confirm:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 0 currentColor;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .navbar {
@@ -374,6 +520,10 @@
             .action-buttons button {
                 width: 100%;
             }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
@@ -392,7 +542,7 @@
         <div class="messages">
             {% for message in messages %}
             <div class="message {{ message.tags }}">
-                {% if message.tags == 'success' %}✓{% else %}⚠{% endif %}
+                {% if message.tags == 'success' %}✓{% elif message.tags == 'error' %}✗{% else %}⚠{% endif %}
                 {{ message }}
             </div>
             {% endfor %}
@@ -456,6 +606,10 @@
                                         ➖ Restar
                                     </button>
                                 </form>
+                                <button type="button" class="delete-user-btn" 
+                                        onclick="confirmDeleteUser('{{ user.user_id }}', '{{ user.nombre }} {{ user.apellido }}')">
+                                    🗑️ Eliminar
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -478,5 +632,66 @@
             <a href="{% url 'accounts:dashboard' %}">← Volver al Panel</a>
         </div>
     </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="modal-overlay" id="deleteUserModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon">⚠️</div>
+                <h2 class="modal-title">¿Eliminar Usuario?</h2>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro que deseas eliminar al usuario</p>
+                <p class="user-name-highlight" id="userNameToDelete"></p>
+                <div class="modal-warning">
+                    ⚠️ <strong>¡ADVERTENCIA!</strong> Esta acción no se puede deshacer.
+                    <br>• Se eliminarán todas las predicciones del usuario
+                    <br>• Se eliminarán todos los resultados asociados
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-cancel" onclick="closeDeleteModal()">
+                    Cancelar
+                </button>
+                <form id="deleteUserForm" method="post" style="display: inline; flex: 1;">
+                    {% csrf_token %}
+                    <button type="submit" class="modal-confirm" style="width: 100%;">
+                        Sí, Eliminar
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDeleteUser(userId, userName) {
+            const modal = document.getElementById('deleteUserModal');
+            const form = document.getElementById('deleteUserForm');
+            const nameSpan = document.getElementById('userNameToDelete');
+            
+            nameSpan.textContent = userName || userId;
+            form.action = `/api/accounts/delete-user/${userId}/`;
+            modal.classList.add('show');
+        }
+
+        function closeDeleteModal() {
+            const modal = document.getElementById('deleteUserModal');
+            modal.classList.remove('show');
+        }
+
+        // Close modal on outside click
+        document.getElementById('deleteUserModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeDeleteModal();
+            }
+        });
+    </script>
 </body>
 </html>

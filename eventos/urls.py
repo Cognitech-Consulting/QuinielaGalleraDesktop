@@ -5,6 +5,7 @@ urlpatterns = [
     path('', views.listar_eventos, name='listar_eventos'),
     path('eventos/<int:evento_id>/', views.detalle_evento, name='detalle_evento'),
     path('eventos/crear/', views.crear_evento, name='crear_evento'),
+    path('eventos/delete/<int:evento_id>/', views.delete_event, name='delete_event'),  # NEW: Delete event
     path('<int:evento_id>/add-round/', views.add_round, name='add_round'),
     path('ronda/<int:ronda_id>/add-match/', views.add_match, name='add_match'),
     path("pelea/<int:pelea_id>/update/", views.update_result, name="update_result"),
@@ -21,10 +22,4 @@ urlpatterns = [
     path('api/evento/<int:evento_id>/equipo-nombre/', views.obtener_nombre_equipo, name='obtener_nombre_equipo'),
     path('api/equipo-nombre/', views.buscar_equipo_global, name='buscar_equipo_global'),
     path('eventos/<int:evento_id>/crear-rondas/', views.crear_rondas, name='crear_rondas'),
-
-
-
-
-
-
 ]
