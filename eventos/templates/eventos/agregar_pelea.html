@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Añadir Pelea | Quiniela Gallera</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 0 60px rgba(239, 68, 68, 0.3);
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            border: 3px solid #000000;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5em;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            font-size: 1.1em;
+            color: #666;
+            font-weight: 500;
+            margin-bottom: 30px;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        /* Available Teams */
+        .teams-available {
+            background: #f0f9ff;
+            border: 3px solid #3b82f6;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .teams-available h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3em;
+            color: #1e40af;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .team-chip {
+            background: #ffffff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 8px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .team-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3em;
+            color: #3b82f6;
+        }
+
+        .team-name {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        /* Fight Setup */
+        .fight-setup {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .team-input-section {
+            text-align: center;
+        }
+
+        .team-input-section label {
+            display: block;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            color: #000;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+
+        .team-input-section input {
+            width: 100px;
+            padding: 15px;
+            border: 3px solid #000;
+            border-radius: 10px;
+            font-size: 1.5em;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .team-preview {
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 700;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9em;
+        }
+
+        .team-preview.valid {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #000;
+            border: 3px solid #000;
+        }
+
+        .team-preview.invalid {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 3px solid #dc2626;
+        }
+
+        .team-preview.empty {
+            background: #f3f4f6;
+            color: #9ca3af;
+            border: 3px dashed #d1d5db;
+        }
+
+        .vs-badge {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5em;
+            color: #fff;
+            border: 4px solid #000;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button, .back-link {
+            flex: 1;
+            padding: 18px 35px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3em;
+            letter-spacing: 2px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        button[type="submit"] {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            border: 3px solid #000;
+            box-shadow: 0 5px 0 #7f1d1d;
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #7f1d1d;
+        }
+
+        .back-link {
+            background: #ffffff;
+            color: #000;
+            border: 3px solid #000;
+            box-shadow: 0 5px 0 #000;
+        }
+
+        .back-link:hover {
+            background: #000;
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #000;
+        }
+
+        /* Hidden input */
+        input[type="hidden"] {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚔️ Añadir Pelea</h1>
+        <p class="subtitle">Ronda {{ ronda.numero }} • {{ ronda.evento.nombre }}</p>
+
+        <!-- Available Teams -->
+        <div class="teams-available">
+            <h3>🏅 Equipos Disponibles:</h3>
+            <div class="teams-grid">
+                {% for equipo in equipos %}
+                <div class="team-chip">
+                    <div class="team-number">#{{ equipo.valor }}</div>
+                    <div class="team-name">{{ equipo.nombre }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <form method="POST" id="fightForm">
+            {% csrf_token %}
+
+            <div class="fight-setup">
+                <div class="team-input-section">
+                    <label>Equipo 1:</label>
+                    <input 
+                        type="text" 
+                        id="team1_input" 
+                        placeholder="#"
+                        pattern="[0-9]+" 
+                        maxlength="3"
+                        onkeyup="updatePreview(1, this.value)"
+                    >
+                    <div class="team-preview empty" id="team1_preview">
+                        Ingresa número
+                    </div>
+                </div>
+
+                <div class="vs-badge">VS</div>
+
+                <div class="team-input-section">
+                    <label>Equipo 2:</label>
+                    <input 
+                        type="text" 
+                        id="team2_input" 
+                        placeholder="#"
+                        pattern="[0-9]+" 
+                        maxlength="3"
+                        onkeyup="updatePreview(2, this.value)"
+                    >
+                    <div class="team-preview empty" id="team2_preview">
+                        Ingresa número
+                    </div>
+                </div>
+            </div>
+
+            <input type="hidden" name="equipo1" id="equipo1">
+            <input type="hidden" name="equipo2" id="equipo2">
+
+            <div class="button-group">
+                <a href="{% url 'detalle_evento' ronda.evento.id %}" class="back-link">
+                    ← Cancelar
+                </a>
+                <button type="submit">
+                    ✓ Añadir Pelea
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const teams = [
+            {% for equipo in equipos %}
+            { number: '{{ equipo.valor }}', name: '{{ equipo.nombre }}' },
+            {% endfor %}
+        ];
+
+        function updatePreview(teamNum, value) {
+            const preview = document.getElementById(`team${teamNum}_preview`);
+            const team = teams.find(t => t.number === value.trim());
+
+            if (!value.trim()) {
+                preview.className = 'team-preview empty';
+                preview.textContent = 'Ingresa número';
+            } else if (team) {
+                preview.className = 'team-preview valid';
+                preview.textContent = `#${team.number} - ${team.name}`;
+                document.getElementById(`equipo${teamNum}`).value = team.name;
+            } else {
+                preview.className = 'team-preview invalid';
+                preview.textContent = `⚠️ Equipo #${value} no existe`;
+                document.getElementById(`equipo${teamNum}`).value = '';
+            }
+        }
+
+        document.getElementById('fightForm').addEventListener('submit', function(e) {
+            const equipo1 = document.getElementById('equipo1').value;
+            const equipo2 = document.getElementById('equipo2').value;
+
+            if (!equipo1 || !equipo2) {
+                e.preventDefault();
+                alert('Por favor selecciona ambos equipos válidos');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

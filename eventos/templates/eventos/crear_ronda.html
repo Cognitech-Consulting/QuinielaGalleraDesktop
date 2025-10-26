@@ -1,140 +1,624 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Crear Rondas y Peleas</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      padding: 20px;
-      margin: 0;
-    }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    }
-    h1 {
-      text-align: center;
-    }
-    .button {
-      margin: 10px 0;
-      padding: 10px 20px;
-      background-color: #3498db;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .button:hover {
-      background-color: #2980b9;
-    }
-    .round, .match {
-      margin-bottom: 15px;
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 5px;
-    }
-    input[type="text"] {
-      padding: 8px;
-      margin: 5px;
-      width: 45%;
-    }
-    .team-name {
-      margin-left: 10px;
-      font-weight: bold;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Añadir Ronda | Quiniela Gallera</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navigation Bar */
+        .navbar {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            border-radius: 15px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 2px solid #ef4444;
+            box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo-badge {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            border: 3px solid #000;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.5);
+        }
+
+        .app-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8em;
+            color: #ffffff;
+            letter-spacing: 2px;
+        }
+
+        .back-button {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 700;
+            border: 3px solid #000;
+            box-shadow: 0 6px 0 #7f1d1d, 0 8px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        .back-button:hover {
+            transform: translateY(2px);
+            box-shadow: 0 4px 0 #7f1d1d, 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Page Header */
+        .page-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            text-align: center;
+            border: 3px solid #000000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3em;
+            color: #000000;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .page-header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .content-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f9f9f9 100%);
+            border-radius: 20px;
+            padding: 40px;
+            border: 3px solid #000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.2em;
+            color: #000;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 4px solid #ef4444;
+        }
+
+        /* Round Number Input */
+        .round-number-section {
+            background: #f9f9f9;
+            border: 3px solid #000;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .round-number-section label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5em;
+            color: #000;
+            display: block;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .round-number-section input {
+            width: 150px;
+            padding: 15px;
+            border: 3px solid #000;
+            border-radius: 10px;
+            font-size: 1.5em;
+            font-weight: 900;
+            text-align: center;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        /* Teams Available */
+        .teams-available {
+            background: #f0f9ff;
+            border: 3px solid #3b82f6;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .teams-available h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5em;
+            color: #1e40af;
+            margin-bottom: 15px;
+            letter-spacing: 1px;
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+
+        .team-chip {
+            background: #ffffff;
+            border: 2px solid #3b82f6;
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        .team-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5em;
+            color: #3b82f6;
+        }
+
+        .team-name {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        /* Fights Section */
+        .fights-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .fight-card {
+            background: linear-gradient(135deg, #f9f9f9, #ffffff);
+            border: 3px solid #000;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .fight-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .fight-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8em;
+            color: #ef4444;
+            letter-spacing: 2px;
+        }
+
+        .remove-fight-btn {
+            background: #dc2626;
+            color: white;
+            border: 2px solid #000;
+            border-radius: 8px;
+            padding: 8px 15px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        .fight-teams {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .fight-team {
+            text-align: center;
+        }
+
+        .fight-team-input {
+            width: 100px;
+            padding: 12px;
+            border: 3px solid #000;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .team-preview {
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 700;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .team-preview.valid {
+            background: linear-gradient(135deg, #fbbf24, #f59e0b);
+            color: #000;
+            border: 3px solid #000;
+            box-shadow: 0 4px 10px rgba(251, 191, 36, 0.4);
+        }
+
+        .team-preview.invalid {
+            background: #fee2e2;
+            color: #dc2626;
+            border: 3px solid #dc2626;
+        }
+
+        .team-preview.empty {
+            background: #f3f4f6;
+            color: #9ca3af;
+            border: 3px dashed #d1d5db;
+        }
+
+        .vs-badge {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5em;
+            color: #fff;
+            border: 4px solid #000;
+            box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .add-fight-btn {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            padding: 15px 30px;
+            border: 3px solid #000;
+            border-radius: 10px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 0 #1e40af;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            margin-top: 20px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+        }
+
+        .add-fight-btn:hover {
+            transform: translateY(2px);
+            box-shadow: 0 4px 0 #1e40af;
+        }
+
+        /* Submit Button */
+        .submit-section {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        .submit-btn {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            padding: 20px 60px;
+            border: 4px solid #000;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 8px 0 #7f1d1d;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Bebas Neue', sans-serif;
+        }
+
+        .submit-btn:hover:not(:disabled) {
+            transform: translateY(2px);
+            box-shadow: 0 6px 0 #7f1d1d;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Messages */
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            border: 3px solid;
+            font-family: 'Bebas Neue', sans-serif;
+            letter-spacing: 1px;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #dc2626;
+            border-color: #dc2626;
+        }
+
+        .message.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #f59e0b;
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Crear Rondas para: {{ evento.nombre }}</h1>
-    <a href="{% url 'gestionar_equipos' evento.id %}" class="button">Gestionar Equipos</a>
-    <form method="post">
-      {% csrf_token %}
-      <div id="roundContainer"></div>
-      <button type="button" class="button" onclick="addRound()">Agregar Ronda</button>
-      <button type="submit" class="button">Guardar</button>
-    </form>
-  </div>
+    <!-- Navigation -->
+    <div class="navbar">
+        <div class="logo-section">
+            <div class="logo-badge">🐓</div>
+            <div class="app-title">Quiniela Gallera</div>
+        </div>
+        <a href="{% url 'detalle_evento' evento.id %}" class="back-button">← Volver</a>
+    </div>
 
-  <script>
-    const eventoId = {{ evento.id }};  // Make event ID available to JS
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>➕ Añadir Nueva Ronda</h1>
+            <p class="subtitle">Evento: <strong>{{ evento.nombre }}</strong></p>
+        </div>
 
-    let roundCount = 0;
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+            <div class="message {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        {% endif %}
 
-    function addRound() {
-      roundCount++;
-      const roundId = `round-${roundCount}`;
-      const roundDiv = document.createElement('div');
-      roundDiv.className = 'round';
-      roundDiv.innerHTML = `
-        <h3>Ronda ${roundCount}</h3>
-        <div id="matches-${roundId}"></div>
-        <button type="button" class="button" onclick="addMatch('${roundId}')">Agregar Pelea</button>
-      `;
-      document.getElementById('roundContainer').appendChild(roundDiv);
-    }
+        <form method="POST" id="roundForm">
+            {% csrf_token %}
 
-    function addMatch(roundId) {
-      const matchContainer = document.getElementById(`matches-${roundId}`);
-      const matchCount = matchContainer.childElementCount + 1;
-      const equipo1Id = `equipo1-${roundId}-match-${matchCount}`;
-      const equipo2Id = `equipo2-${roundId}-match-${matchCount}`;
-      const label1Id = `label-${roundId}-match-${matchCount}-e1`;
-      const label2Id = `label-${roundId}-match-${matchCount}-e2`;
+            <div class="content-section">
+                <!-- Round Number -->
+                <div class="round-number-section">
+                    <label for="round_number">🔢 Número de Ronda:</label>
+                    <input 
+                        type="number" 
+                        id="round_number" 
+                        name="round_number" 
+                        min="1" 
+                        required 
+                        placeholder="#"
+                        value="{{ next_round_number }}"
+                    >
+                </div>
 
-      const matchDiv = document.createElement('div');
-      matchDiv.className = 'match';
-      matchDiv.innerHTML = `
-        <label>Pelea ${matchCount}</label><br>
-        <input type="text" name="${equipo1Id}" placeholder="Equipo 1 (valor)" onblur="fetchTeamName(this, '${label1Id}')">
-        <span id="${label1Id}" class="team-name"></span><br>
-        <input type="text" name="${equipo2Id}" placeholder="Equipo 2 (valor)" onblur="fetchTeamName(this, '${label2Id}')">
-        <span id="${label2Id}" class="team-name"></span>
-      `;
-      matchContainer.appendChild(matchDiv);
-    }
+                <!-- Available Teams -->
+                <div class="teams-available">
+                    <h3>🏅 Equipos Disponibles:</h3>
+                    <div class="teams-grid">
+                        {% for equipo in equipos %}
+                        <div class="team-chip">
+                            <div class="team-number">#{{ equipo.valor }}</div>
+                            <div class="team-name">{{ equipo.nombre }}</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
 
-    function fetchTeamName(inputElement, labelId) {
-      const rawValor = inputElement.value.trim();
-      const valor = rawValor.split(':')[0];
+                <h2 class="section-title">⚔️ Crear Peleas para esta Ronda</h2>
+                
+                <div class="message warning">
+                    💡 Ingresa los números de equipo para cada pelea. Los nombres aparecerán automáticamente.
+                </div>
 
-      const label = document.getElementById(labelId);
+                <div id="fightsContainer" class="fights-container"></div>
 
-      if (!valor) {
-        label.textContent = '';
-        label.style.color = '';
-        return;
-      }
+                <button type="button" class="add-fight-btn" onclick="addFight()">
+                    ➕ Agregar Pelea
+                </button>
 
-      fetch(`/eventos/api/evento/${eventoId}/equipo-nombre/?valor=${valor}`)
-        .then(response => {
-          if (!response.ok) {
-            throw new Error("Network response was not ok");
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.nombre) {
-            label.textContent = `→ ${data.nombre}`;
-            label.style.color = "#27ae60";
-          } else {
-            label.textContent = '⚠ No encontrado';
-            label.style.color = "#e74c3c";
-          }
-        })
-        .catch(error => {
-          console.error("Error fetching team name:", error);
-          label.textContent = '⚠ Error';
-          label.style.color = "#e74c3c";
+                <div class="submit-section">
+                    <button type="submit" class="submit-btn" id="submitBtn">
+                        ✓ Crear Ronda con Peleas
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hidden input to store fights JSON -->
+            <input type="hidden" name="fights_data" id="fightsData">
+        </form>
+    </div>
+
+    <script>
+        // Teams data from Django
+        const teams = [
+            {% for equipo in equipos %}
+            { number: '{{ equipo.valor }}', name: '{{ equipo.nombre }}' },
+            {% endfor %}
+        ];
+
+        let fights = [];
+        let fightCounter = 0;
+
+        // Add initial fight
+        addFight();
+
+        function addFight() {
+            fightCounter++;
+            const fightId = `fight-${fightCounter}`;
+            
+            fights.push({
+                id: fightId,
+                team1: '',
+                team2: '',
+                numero_pelea: fightCounter
+            });
+
+            const container = document.getElementById('fightsContainer');
+            const fightHTML = `
+                <div class="fight-card" id="${fightId}">
+                    <div class="fight-header">
+                        <div class="fight-number">PELEA #${fightCounter}</div>
+                        <button type="button" class="remove-fight-btn" onclick="removeFight('${fightId}')">
+                            ✕ Eliminar
+                        </button>
+                    </div>
+                    <div class="fight-teams">
+                        <div class="fight-team">
+                            <input type="text" class="fight-team-input" 
+                                   placeholder="#" 
+                                   onkeyup="updateFightPreview('${fightId}', 1, this.value)"
+                                   pattern="[0-9]+" maxlength="3">
+                            <div class="team-preview empty" id="${fightId}-team1-preview">
+                                Equipo 1
+                            </div>
+                        </div>
+                        <div class="vs-badge">VS</div>
+                        <div class="fight-team">
+                            <input type="text" class="fight-team-input" 
+                                   placeholder="#"
+                                   onkeyup="updateFightPreview('${fightId}', 2, this.value)"
+                                   pattern="[0-9]+" maxlength="3">
+                            <div class="team-preview empty" id="${fightId}-team2-preview">
+                                Equipo 2
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.insertAdjacentHTML('beforeend', fightHTML);
+        }
+
+        function removeFight(fightId) {
+            fights = fights.filter(f => f.id !== fightId);
+            document.getElementById(fightId).remove();
+        }
+
+        function updateFightPreview(fightId, teamNum, value) {
+            const fight = fights.find(f => f.id === fightId);
+            const preview = document.getElementById(`${fightId}-team${teamNum}-preview`);
+            const team = teams.find(t => t.number === value.trim());
+
+            // Update fight data
+            if (teamNum === 1) {
+                fight.team1 = value.trim();
+            } else {
+                fight.team2 = value.trim();
+            }
+
+            // Update preview
+            if (!value.trim()) {
+                preview.className = 'team-preview empty';
+                preview.textContent = `Equipo ${teamNum}`;
+            } else if (team) {
+                preview.className = 'team-preview valid';
+                preview.textContent = `#${team.number} - ${team.name}`;
+            } else {
+                preview.className = 'team-preview invalid';
+                preview.textContent = `⚠️ Equipo #${value} no registrado`;
+            }
+        }
+
+        // Form submission
+        document.getElementById('roundForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Validate round number
+            const roundNumber = document.getElementById('round_number').value;
+            if (!roundNumber || roundNumber < 1) {
+                alert('Ingresa un número de ronda válido');
+                return;
+            }
+
+            // Validate fights
+            if (fights.length === 0) {
+                alert('Debes crear al menos 1 pelea');
+                return;
+            }
+
+            // Validate all fights have valid teams
+            for (let fight of fights) {
+                if (!fight.team1 || !fight.team2) {
+                    alert(`La pelea #${fight.numero_pelea} está incompleta`);
+                    return;
+                }
+
+                const team1Exists = teams.find(t => t.number === fight.team1);
+                const team2Exists = teams.find(t => t.number === fight.team2);
+
+                if (!team1Exists) {
+                    alert(`El equipo #${fight.team1} en la pelea #${fight.numero_pelea} no está registrado`);
+                    return;
+                }
+
+                if (!team2Exists) {
+                    alert(`El equipo #${fight.team2} en la pelea #${fight.numero_pelea} no está registrado`);
+                    return;
+                }
+            }
+
+            // Store data in hidden input
+            document.getElementById('fightsData').value = JSON.stringify(fights);
+
+            // Submit form
+            this.submit();
         });
-    }
-  </script>
+    </script>
 </body>
 </html>

@@ -56,24 +56,24 @@ def crear_evento(request):
             nombre = request.POST.get('nombre')
             fecha_evento = request.POST.get('fecha_evento')
             ubicacion = request.POST.get('ubicacion')
-            
+
             # Get JSON data for teams and fights
             teams_data = json.loads(request.POST.get('teams_data', '[]'))
             fights_data = json.loads(request.POST.get('fights_data', '[]'))
-            
+
             # Validate
             if not nombre or not fecha_evento or not ubicacion:
                 messages.error(request, '❌ Completa todos los campos del evento')
                 return render(request, 'eventos/crear_evento.html')
-            
+
             if len(teams_data) < 2:
                 messages.error(request, '❌ Debes registrar al menos 2 equipos')
                 return render(request, 'eventos/crear_evento.html')
-            
+
             if len(fights_data) == 0:
                 messages.error(request, '❌ Debes crear al menos 1 pelea')
                 return render(request, 'eventos/crear_evento.html')
-            
+
             # Create everything in ONE atomic transaction
             with transaction.atomic():
                 # 1. Create Event
@@ -82,7 +82,7 @@ def crear_evento(request):
                     fecha=fecha_evento,
                     ubicacion=ubicacion
                 )
-                
+
                 # 2. Create Teams
                 team_map = {}  # Map team numbers to team names
                 for team_data in teams_data:
@@ -92,36 +92,36 @@ def crear_evento(request):
                         valor=int(team_data['number'])
                     )
                     team_map[team_data['number']] = team_data['name']
-                
+
                 # 3. Create ONE default round
                 ronda = Ronda.objects.create(
                     evento=evento,
                     numero=1
                 )
-                
+
                 # 4. Create Fights
                 for fight_data in fights_data:
                     team1_number = fight_data['team1']
                     team2_number = fight_data['team2']
-                    
+
                     # Get team names from map
                     equipo1_nombre = team_map.get(team1_number)
                     equipo2_nombre = team_map.get(team2_number)
-                    
+
                     if not equipo1_nombre or not equipo2_nombre:
                         raise ValueError(f"Invalid team numbers in fight {fight_data['numero_pelea']}")
-                    
+
                     # Create fight
                     Pelea.objects.create(
                         ronda=ronda,
                         equipo1=equipo1_nombre,
                         equipo2=equipo2_nombre
                     )
-                
+
                 # Success!
                 messages.success(request, f'✅ Evento "{nombre}" creado exitosamente con {len(teams_data)} equipos y {len(fights_data)} peleas!')
                 return redirect('detalle_evento', evento_id=evento.id)
-                
+
         except json.JSONDecodeError:
             messages.error(request, '❌ Error al procesar los datos. Intenta nuevamente.')
             return render(request, 'eventos/crear_evento.html')
@@ -131,7 +131,7 @@ def crear_evento(request):
         except Exception as e:
             messages.error(request, f'❌ Error inesperado: {str(e)}')
             return render(request, 'eventos/crear_evento.html')
-    
+
     # GET request - show the form
     return render(request, 'eventos/crear_evento.html')
 
@@ -158,7 +158,7 @@ def crear_rondas(request, evento_id):
                     # Parse valor (handle "valor:nombre" format)
                     valor_str = value.split(':')[0].strip()
                     valor_int = int(valor_str)
-                    
+
                     # Get the team name from NombreEquipo
                     try:
                         equipo = NombreEquipo.objects.get(evento_id=evento_id, valor=valor_int)
@@ -187,7 +187,7 @@ def crear_rondas(request, evento_id):
                             equipo1=teams['equipo1'],
                             equipo2=teams['equipo2']
                         )
-            
+
             messages.success(request, 'Rondas y peleas creadas exitosamente!')
             return redirect('detalle_evento', evento_id=evento.id)
         else:
@@ -199,31 +199,118 @@ def crear_rondas(request, evento_id):
     })
 
 
-# Function to add a new round to an existing event
+# FUNCIÓN MEJORADA: Add a new round to an existing event WITH MULTIPLE FIGHTS
 @login_required
 def add_round(request, evento_id):
+    """
+    Add a new round to an existing event with multiple fights
+    """
     evento = get_object_or_404(Evento, id=evento_id)
-    if request.method == "POST":
-        numero = request.POST.get("numero")
-        if numero:
-            Ronda.objects.create(evento=evento, numero=numero)
-            messages.success(request, f'Ronda {numero} añadida exitosamente')
-        return redirect("detalle_evento", evento_id=evento_id)
-    return render(request, "eventos/add_round.html", {"evento": evento})
+    equipos = NombreEquipo.objects.filter(evento=evento).order_by('valor')
+    
+    # Calculate next round number
+    existing_rounds = Ronda.objects.filter(evento=evento)
+    next_round_number = existing_rounds.count() + 1 if existing_rounds.exists() else 1
+    
+    if request.method == 'POST':
+        try:
+            # Get round number
+            round_number = int(request.POST.get('round_number', next_round_number))
+            
+            # Get fights data
+            fights_data = json.loads(request.POST.get('fights_data', '[]'))
+            
+            # Validate
+            if len(fights_data) == 0:
+                messages.error(request, '❌ Debes crear al menos 1 pelea')
+                return render(request, 'eventos/crear_ronda.html', {
+                    'evento': evento,
+                    'equipos': equipos,
+                    'next_round_number': next_round_number
+                })
+            
+            # Create team number to name mapping
+            team_map = {str(equipo.valor): equipo.nombre for equipo in equipos}
+            
+            # Create everything in one transaction
+            with transaction.atomic():
+                # Check if round number already exists
+                if Ronda.objects.filter(evento=evento, numero=round_number).exists():
+                    messages.error(request, f'❌ La ronda {round_number} ya existe')
+                    return render(request, 'eventos/crear_ronda.html', {
+                        'evento': evento,
+                        'equipos': equipos,
+                        'next_round_number': next_round_number
+                    })
+                
+                # Create the round
+                ronda = Ronda.objects.create(
+                    evento=evento,
+                    numero=round_number
+                )
+                
+                # Create all fights for this round
+                for fight_data in fights_data:
+                    team1_number = fight_data['team1']
+                    team2_number = fight_data['team2']
+                    
+                    # Get team names
+                    equipo1_nombre = team_map.get(team1_number)
+                    equipo2_nombre = team_map.get(team2_number)
+                    
+                    if not equipo1_nombre or not equipo2_nombre:
+                        raise ValueError(f"Invalid team numbers in fight {fight_data['numero_pelea']}")
+                    
+                    # Create fight
+                    Pelea.objects.create(
+                        ronda=ronda,
+                        equipo1=equipo1_nombre,
+                        equipo2=equipo2_nombre
+                    )
+                
+                messages.success(request, f'✅ Ronda {round_number} creada con {len(fights_data)} peleas!')
+                return redirect('detalle_evento', evento_id=evento.id)
+                
+        except json.JSONDecodeError:
+            messages.error(request, '❌ Error al procesar los datos')
+        except ValueError as e:
+            messages.error(request, f'❌ Error: {str(e)}')
+        except Exception as e:
+            logger.error(f"Error adding round: {str(e)}")
+            messages.error(request, f'❌ Error inesperado: {str(e)}')
+    
+    # GET request - show the form
+    return render(request, 'eventos/crear_ronda.html', {
+        'evento': evento,
+        'equipos': equipos,
+        'next_round_number': next_round_number
+    })
 
 
-# Function to add a new match to an existing round
+# FUNCIÓN MEJORADA: Add a single fight to an existing round
 @login_required
 def add_match(request, ronda_id):
+    """
+    Add a single fight to an existing round
+    """
     ronda = get_object_or_404(Ronda, id=ronda_id)
+    equipos = NombreEquipo.objects.filter(evento=ronda.evento).order_by('valor')
+    
     if request.method == "POST":
         equipo1 = request.POST.get("equipo1")
         equipo2 = request.POST.get("equipo2")
+        
         if equipo1 and equipo2:
             Pelea.objects.create(ronda=ronda, equipo1=equipo1, equipo2=equipo2)
-            messages.success(request, 'Pelea añadida exitosamente')
-        return redirect("detalle_evento", evento_id=ronda.evento.id)
-    return render(request, "eventos/add_match.html", {"ronda": ronda})
+            messages.success(request, f'✅ Pelea añadida: {equipo1} vs {equipo2}')
+            return redirect("detalle_evento", evento_id=ronda.evento.id)
+        else:
+            messages.error(request, '❌ Selecciona ambos equipos')
+    
+    return render(request, "eventos/agregar_pelea.html", {
+        "ronda": ronda,
+        "equipos": equipos
+    })
 
 
 @login_required
@@ -233,10 +320,10 @@ def update_result(request, pelea_id):
     without accessing non-existent user.profile
     """
     pelea = get_object_or_404(Pelea, id=pelea_id)
-    
+
     if request.method == "POST":
         resultado = request.POST.get("resultado")
-        
+
         if resultado in ['equipo1', 'equipo2', 'tie']:
             with transaction.atomic():
                 # Save the result
@@ -245,13 +332,13 @@ def update_result(request, pelea_id):
 
                 # Get the event
                 evento = pelea.ronda.evento
-                
+
                 # Get all predictions for this fight
                 predictions = Prediccion.objects.filter(pelea=pelea)
-                
+
                 # Get unique users who made predictions for this fight
                 users_to_update = set(pred.user for pred in predictions)
-                
+
                 # For each user, recalculate their TOTAL points for this event
                 for user in users_to_update:
                     # Get all predictions by this user for this event
@@ -259,13 +346,13 @@ def update_result(request, pelea_id):
                         user=user,
                         pelea__ronda__evento=evento
                     )
-                    
+
                     # Calculate total correct predictions
                     total_points = sum(
-                        1 for pred in user_predictions 
+                        1 for pred in user_predictions
                         if pred.pelea.resultado and pred.prediccion == pred.pelea.resultado
                     )
-                    
+
                     # Update or create the EventoUserResult
                     EventoUserResult.objects.update_or_create(
                         user=user,
@@ -274,7 +361,7 @@ def update_result(request, pelea_id):
                     )
 
                 messages.success(request, f'Resultado actualizado: {resultado}')
-            
+
             return redirect("detalle_evento", evento_id=pelea.ronda.evento.id)
         else:
             messages.error(request, 'Resultado inválido')
@@ -525,7 +612,7 @@ def gestionar_equipos(request, evento_id):
 def obtener_nombre_equipo(request, evento_id):
     """Get team name by valor for a specific event"""
     valor = request.GET.get('valor')
-    
+
     if not valor:
         return JsonResponse({'error': 'Falta valor'}, status=400)
 
@@ -564,3 +651,114 @@ def buscar_equipo_global(request):
     except Exception as e:
         logger.error(f"Error in buscar_equipo_global: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def get_current_event(request):
+    """Get the currently active event with all its rounds and fights"""
+    try:
+        current_event = Evento.objects.get(current=True)
+
+        # Get all rounds for this event
+        rondas = Ronda.objects.filter(evento=current_event).order_by('numero')
+
+        rounds_data = []
+        for ronda in rondas:
+            peleas = Pelea.objects.filter(ronda=ronda)
+            fights_data = [
+                {
+                    'id': pelea.id,
+                    'equipo1': pelea.equipo1,
+                    'equipo2': pelea.equipo2,
+                    'resultado': pelea.resultado if pelea.resultado else None
+                }
+                for pelea in peleas
+            ]
+
+            rounds_data.append({
+                'id': ronda.id,
+                'numero': ronda.numero,
+                'peleas': fights_data
+            })
+
+        return JsonResponse({
+            'id': current_event.id,
+            'nombre': current_event.nombre,
+            'fecha': str(current_event.fecha),
+            'ubicacion': current_event.ubicacion,
+            'rondas': rounds_data,
+            'results_visible': current_event.results_visible,
+            'ranking_visible': current_event.ranking_visible
+        }, status=200)
+
+    except Evento.DoesNotExist:
+        return JsonResponse({'error': 'No hay evento activo'}, status=404)
+    except Exception as e:
+        logger.error(f"Error getting current event: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@csrf_exempt
+def check_participation(request):
+    """Check if a user has already participated in the current event"""
+    try:
+        user_id = request.GET.get('user_id')
+
+        if not user_id:
+            return JsonResponse({'error': 'Falta user_id'}, status=400)
+
+        user = CustomUser.objects.get(user_id=user_id)
+        current_event = Evento.objects.get(current=True)
+
+        # Check if user has already submitted predictions for this event
+        has_participated = EventoUserResult.objects.filter(
+            user=user,
+            evento=current_event
+        ).exists()
+
+        return JsonResponse({
+            'has_participated': has_participated,
+            'event_id': current_event.id,
+            'event_name': current_event.nombre,
+            'tickets_available': user.event_tickets
+        }, status=200)
+
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+    except Evento.DoesNotExist:
+        return JsonResponse({'error': 'No hay evento activo'}, status=404)
+    except Exception as e:
+        logger.error(f"Error checking participation: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+def toggle_event_status(request, evento_id):
+    """Toggle the current status of an event (activate/deactivate)"""
+    if request.method == 'POST':
+        try:
+            evento = Evento.objects.get(id=evento_id)
+
+            if evento.current:
+                # Deactivate this event
+                evento.current = False
+                evento.save()
+                messages.success(request, f'Evento "{evento.nombre}" desactivado')
+            else:
+                # Activate this event (and deactivate all others)
+                Evento.objects.filter(current=True).update(current=False)
+                evento.current = True
+                evento.save()
+                messages.success(request, f'Evento "{evento.nombre}" activado')
+
+            return redirect('listar_eventos')
+
+        except Evento.DoesNotExist:
+            messages.error(request, 'Evento no encontrado')
+            return redirect('listar_eventos')
+        except Exception as e:
+            logger.error(f"Error toggling event status: {str(e)}")
+            messages.error(request, f'Error: {str(e)}')
+            return redirect('listar_eventos')
+
+    return JsonResponse({'error': 'Método inválido'}, status=405)
