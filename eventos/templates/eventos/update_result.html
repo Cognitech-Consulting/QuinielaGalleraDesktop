@@ -3,21 +3,546 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Actualizar Resultado</title>
+    <title>Actualizar Resultado | Quiniela Gallera</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Animated background flames */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 
+                0 0 60px rgba(239, 68, 68, 0.3),
+                0 20px 60px rgba(0, 0, 0, 0.5);
+            padding: 40px;
+            max-width: 700px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            border: 3px solid #000000;
+        }
+
+        /* Logo badge style header */
+        .header-badge {
+            position: relative;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header-badge::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 120px;
+            height: 120px;
+            border: 3px solid #ef4444;
+            border-radius: 50%;
+            opacity: 0.2;
+        }
+
+        h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5em;
+            color: #000000;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin-bottom: 10px;
+            position: relative;
+            display: inline-block;
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ef4444, transparent);
+        }
+
+        .subtitle {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        /* Fight info card */
+        .fight-info {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px solid #ef4444;
+        }
+
+        .fight-info::before {
+            content: '🔥';
+            position: absolute;
+            top: 10px;
+            right: 20px;
+            font-size: 2em;
+            opacity: 0.3;
+        }
+
+        .fight-info::after {
+            content: '🔥';
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            font-size: 2em;
+            opacity: 0.3;
+        }
+
+        .fight-teams {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 15px 0;
+        }
+
+        .team {
+            flex: 1;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #ef4444;
+            border-radius: 10px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            backdrop-filter: blur(10px);
+        }
+
+        .vs {
+            background: #ef4444;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            font-weight: bold;
+            letter-spacing: 2px;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .current-result {
+            background: rgba(239, 68, 68, 0.2);
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            font-weight: 500;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        /* Form styling */
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        label.form-label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3em;
+            color: #000000;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+
+        .options-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option {
+            position: relative;
+        }
+
+        .option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .option label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: #f9f9f9;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.4em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option label::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 0;
+            background: #ef4444;
+            transition: width 0.3s ease;
+            z-index: 0;
+        }
+
+        .option label span {
+            position: relative;
+            z-index: 1;
+            transition: color 0.3s ease;
+        }
+
+        .option input[type="radio"]:checked + label {
+            background: #ef4444;
+            border-color: #dc2626;
+            color: white;
+            transform: scale(1.02);
+            box-shadow: 
+                0 5px 25px rgba(239, 68, 68, 0.4),
+                inset 0 -3px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .option label:hover {
+            border-color: #ef4444;
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(239, 68, 68, 0.2);
+        }
+
+        .option input[type="radio"]:checked + label::before {
+            width: 100%;
+        }
+
+        /* Warning message */
+        .warning {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 3px solid #f59e0b;
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            color: #92400e;
+        }
+
+        .warning.show {
+            display: flex;
+            animation: shake 0.5s ease;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .warning-icon {
+            font-size: 1.5em;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button, .back-link {
+            flex: 1;
+            padding: 18px 35px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3em;
+            letter-spacing: 2px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            text-align: center;
+            display: inline-block;
+            text-transform: uppercase;
+            font-weight: bold;
+            position: relative;
+            overflow: hidden;
+        }
+
+        button[type="submit"] {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: 3px solid #000000;
+            box-shadow: 
+                0 5px 0 #7f1d1d,
+                0 8px 20px rgba(239, 68, 68, 0.4);
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-3px);
+            box-shadow: 
+                0 8px 0 #7f1d1d,
+                0 12px 30px rgba(239, 68, 68, 0.5);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 2px 0 #7f1d1d,
+                0 4px 10px rgba(239, 68, 68, 0.3);
+        }
+
+        button[type="submit"]:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .back-link {
+            background: #ffffff;
+            color: #000000;
+            border: 3px solid #000000;
+            box-shadow: 
+                0 5px 0 #000000,
+                0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .back-link:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 
+                0 8px 0 #000000,
+                0 12px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-link:active {
+            transform: translateY(2px);
+            box-shadow: 
+                0 2px 0 #000000,
+                0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Loading state */
+        button[type="submit"]:disabled::after {
+            content: '⏳';
+            margin-left: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .fight-teams {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .team {
+                font-size: 1.2em;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .option label {
+                font-size: 1.2em;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Actualizar Resultado</h1>
-    <p>Pelea: <strong>{{ pelea.equipo1 }}</strong> vs <strong>{{ pelea.equipo2 }}</strong></p>
-    <form method="post">
-        {% csrf_token %}
-        <label for="resultado">Resultado:</label>
-        <select name="resultado" id="resultado" required>
-            <option value="equipo1" {% if pelea.resultado == 'equipo1' %}selected{% endif %}>Equipo 1 Ganó</option>
-            <option value="equipo2" {% if pelea.resultado == 'equipo2' %}selected{% endif %}>Equipo 2 Ganó</option>
-            <option value="tie" {% if pelea.resultado == 'tie' %}selected{% endif %}>Empate</option>
-        </select>
-        <button type="submit">Guardar</button>
-    </form>
-    <a href="{% url 'detalle_evento' pelea.ronda.evento.id %}">Volver al Evento</a>
+    <div class="container">
+        <div class="header-badge">
+            <h1>⚔️ Actualizar Resultado</h1>
+            <div class="subtitle">Quiniela Gallera</div>
+        </div>
+        
+        <div class="fight-info">
+            <div class="fight-teams">
+                <div class="team">{{ pelea.equipo1 }}</div>
+                <div class="vs">VS</div>
+                <div class="team">{{ pelea.equipo2 }}</div>
+            </div>
+            {% if pelea.resultado %}
+            <div class="current-result">
+                <strong>RESULTADO ACTUAL:</strong>
+                {% if pelea.resultado == 'equipo1' %}
+                    🏆 {{ pelea.equipo1 }} Ganó
+                {% elif pelea.resultado == 'equipo2' %}
+                    🏆 {{ pelea.equipo2 }} Ganó
+                {% else %}
+                    🤝 Empate
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="current-result">
+                ⏳ RESULTADO PENDIENTE
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="warning" id="warning">
+            <span class="warning-icon">⚠️</span>
+            <strong>¡ATENCIÓN!</strong> Selecciona un resultado antes de guardar.
+        </div>
+
+        <form method="post" id="resultForm">
+            {% csrf_token %}
+            <label class="form-label">🎯 Selecciona el Ganador:</label>
+            
+            <div class="options-container">
+                <div class="option">
+                    <input 
+                        type="radio" 
+                        name="resultado" 
+                        id="equipo1" 
+                        value="equipo1"
+                        {% if pelea.resultado == 'equipo1' %}checked{% endif %}
+                    >
+                    <label for="equipo1">
+                        <span>🏆 {{ pelea.equipo1 }} Ganó</span>
+                    </label>
+                </div>
+
+                <div class="option">
+                    <input 
+                        type="radio" 
+                        name="resultado" 
+                        id="equipo2" 
+                        value="equipo2"
+                        {% if pelea.resultado == 'equipo2' %}checked{% endif %}
+                    >
+                    <label for="equipo2">
+                        <span>🏆 {{ pelea.equipo2 }} Ganó</span>
+                    </label>
+                </div>
+
+                <div class="option">
+                    <input 
+                        type="radio" 
+                        name="resultado" 
+                        id="tie" 
+                        value="tie"
+                        {% if pelea.resultado == 'tie' %}checked{% endif %}
+                    >
+                    <label for="tie">
+                        <span>🤝 Empate</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <a href="{% url 'detalle_evento' pelea.ronda.evento.id %}" class="back-link">
+                    ← Volver
+                </a>
+                <button type="submit" id="submitBtn">
+                    ✓ Guardar Resultado
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById('resultForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const warning = document.getElementById('warning');
+        const radioButtons = document.querySelectorAll('input[type="radio"]');
+
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const selected = document.querySelector('input[name="resultado"]:checked');
+            
+            if (!selected) {
+                e.preventDefault();
+                warning.classList.add('show');
+                setTimeout(() => {
+                    warning.classList.remove('show');
+                }, 3000);
+                return false;
+            }
+
+            // Show loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Guardando...';
+            
+            return true;
+        });
+
+        // Hide warning when selection is made
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', function() {
+                warning.classList.remove('show');
+            });
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                form.submit();
+            }
+        });
+    </script>
 </body>
 </html>

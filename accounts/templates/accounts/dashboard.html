@@ -3,105 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Control - Quiniela Gallera</title>
+    <title>Panel de Control | Quiniela Gallera</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* Basic styling */
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f4f4f9;
+            box-sizing: border-box;
         }
 
-        /* Navbar styling */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navbar */
         .navbar {
-            background-color: #2c3e50;
-            color: #ecf0f1;
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            color: #ffffff;
             display: flex;
             justify-content: space-between;
-            padding: 10px 20px;
             align-items: center;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 40px;
+            border: 3px solid #ef4444;
+            box-shadow: 
+                0 0 40px rgba(239, 68, 68, 0.3),
+                0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .navbar-brand {
-            font-size: 1.5em;
-            font-weight: bold;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2em;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
-        /* Button styling */
-        .dashboard-container {
+        .logo-badge {
+            width: 50px;
+            height: 50px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            border: 3px solid #000000;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        /* Dashboard header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border-radius: 20px;
+            padding: 50px 40px;
+            text-align: center;
+            margin-bottom: 40px;
+            border: 3px solid #000000;
+            box-shadow: 
+                0 0 40px rgba(239, 68, 68, 0.2),
+                0 20px 60px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-header::before {
+            content: '🏆';
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            font-size: 5em;
+            opacity: 0.1;
+        }
+
+        .dashboard-header::after {
+            content: '🔥';
+            position: absolute;
+            bottom: 20px;
+            left: 40px;
+            font-size: 4em;
+            opacity: 0.1;
+        }
+
+        .dashboard-header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 4em;
+            color: #000000;
+            margin-bottom: 15px;
+            letter-spacing: 5px;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        .dashboard-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 5px;
+            background: linear-gradient(90deg, transparent, #ef4444, transparent);
+        }
+
+        .dashboard-header p {
+            font-size: 1.3em;
+            color: #666;
+            margin-top: 25px;
+            font-weight: 500;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Button grid */
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .dashboard-card {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 20px;
             padding: 40px;
             text-align: center;
-        }
-
-        .dashboard-container h1 {
-            font-size: 2.5em;
-            color: #2c3e50;
-            margin-bottom: 10px;
-        }
-
-        .dashboard-container p {
-            font-size: 1.2em;
-            color: #7f8c8d;
-            max-width: 600px;
-            margin: 0 auto 30px;
-        }
-
-        .button-group {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-
-        .button-group a {
-            display: inline-block;
-            padding: 15px 30px;
-            color: #ffffff;
-            background-color: #3498db;
-            border-radius: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            position: relative;
+            overflow: hidden;
             text-decoration: none;
-            font-size: 1.2em;
-            transition: background-color 0.3s;
+            display: block;
         }
 
-        .button-group a:hover {
-            background-color: #2980b9;
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 8px;
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
         }
 
-        .button-group a.usuarios {
-            background-color: #2ecc71;
+        .dashboard-card:hover {
+            transform: translateY(-10px) translateX(5px);
+            box-shadow: 
+                -8px 0 0 #ef4444,
+                0 20px 50px rgba(239, 68, 68, 0.3);
         }
 
-        .button-group a.usuarios:hover {
-            background-color: #27ae60;
+        .card-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+            display: block;
         }
 
-        .button-group a.eventos {
-            background-color: #e74c3c;
+        .card-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5em;
+            color: #000000;
+            margin-bottom: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
         }
 
-        .button-group a.eventos:hover {
-            background-color: #c0392b;
+        .card-description {
+            color: #666;
+            font-size: 1.1em;
+            line-height: 1.6;
+            font-weight: 500;
+        }
+
+        .card-action {
+            display: inline-block;
+            margin-top: 25px;
+            padding: 15px 35px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.3em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 5px 0 #7f1d1d;
+            transition: all 0.3s ease;
+        }
+
+        .card-action:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #7f1d1d;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            border: 3px solid #ef4444;
+            border-radius: 15px;
+            padding: 25px 35px;
+            margin-bottom: 40px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            box-shadow: 
+                0 0 30px rgba(239, 68, 68, 0.2),
+                0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-item {
+            text-align: center;
+            color: white;
+        }
+
+        .stat-value {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3em;
+            color: #ef4444;
+            display: block;
+            text-shadow: 0 0 20px rgba(239, 68, 68, 0.5);
+        }
+
+        .stat-label {
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #ccc;
+            margin-top: 5px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+                padding: 20px;
+            }
+
+            .dashboard-header h1 {
+                font-size: 2.5em;
+            }
+
+            .dashboard-header p {
+                font-size: 1.1em;
+            }
+
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-bar {
+                flex-direction: column;
+                gap: 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="navbar-brand">Quiniela Gallera Dash</div>
-    </nav>
+    <div class="container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <div class="logo-badge">🐓</div>
+                Quiniela Gallera
+            </div>
+        </nav>
 
-    <!-- Dashboard Content -->
-    <div class="dashboard-container">
-        <h1>Bienvenido al Panel de Control</h1>
-        <p>Seleccione una sección a continuación para gestionar Usuarios, Eventos, Rondas y Partidos.</p>
+        <!-- Stats Bar (Optional - remove if you don't have stats) -->
+        <!-- 
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-value">24</span>
+                <span class="stat-label">Eventos Activos</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">156</span>
+                <span class="stat-label">Usuarios</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">89</span>
+                <span class="stat-label">Peleas Hoy</span>
+            </div>
+        </div>
+        -->
 
-        <!-- Buttons for each category -->
+        <!-- Dashboard Header -->
+        <div class="dashboard-header">
+            <h1>🎯 Panel de Control</h1>
+            <p>Gestiona todos los aspectos de Quiniela Gallera desde este panel central</p>
+        </div>
+
+        <!-- Action Cards -->
         <div class="button-group">
-            <a href="{% url 'accounts:manage_users' %}" class="usuarios">Usuarios</a>
-            <a href="{% url 'listar_eventos' %}">Eventos</a>
+            <a href="{% url 'accounts:manage_users' %}" class="dashboard-card">
+                <span class="card-icon">👥</span>
+                <h2 class="card-title">Usuarios</h2>
+                <p class="card-description">Administra cuentas de usuario, tickets y permisos</p>
+                <span class="card-action">Gestionar Usuarios</span>
+            </a>
 
+            <a href="{% url 'listar_eventos' %}" class="dashboard-card">
+                <span class="card-icon">🏆</span>
+                <h2 class="card-title">Eventos</h2>
+                <p class="card-description">Crea, edita y administra eventos de peleas de gallos</p>
+                <span class="card-action">Ver Eventos</span>
+            </a>
+
+            <!-- Add more cards as needed -->
+            <!--
+            <a href="#" class="dashboard-card">
+                <span class="card-icon">📊</span>
+                <h2 class="card-title">Reportes</h2>
+                <p class="card-description">Visualiza estadísticas y análisis detallados</p>
+                <span class="card-action">Ver Reportes</span>
+            </a>
+
+            <a href="#" class="dashboard-card">
+                <span class="card-icon">⚙️</span>
+                <h2 class="card-title">Configuración</h2>
+                <p class="card-description">Ajusta preferencias del sistema</p>
+                <span class="card-action">Configurar</span>
+            </a>
+            -->
         </div>
     </div>
 </body>

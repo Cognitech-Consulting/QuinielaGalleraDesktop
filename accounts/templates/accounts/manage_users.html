@@ -1,231 +1,482 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestionar Usuarios</title>
+    <title>Gestionar Usuarios | Quiniela Gallera</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
-        /* General Styles */
-        body {
-            font-family: Arial, sans-serif;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f4f4f4;
+            box-sizing: border-box;
         }
 
-        /* Navbar Styles */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Animated background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Navbar */
         .navbar {
-            background-color: #333;
-            color: #fff;
-            padding: 15px;
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            color: #ffffff;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 20px 30px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            border: 3px solid #ef4444;
+            box-shadow: 0 0 40px rgba(239, 68, 68, 0.3);
         }
 
         .navbar-brand {
-            font-size: 24px;
-            font-weight: bold;
-        }
-
-        .navbar-links {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8em;
+            letter-spacing: 3px;
+            text-transform: uppercase;
             display: flex;
+            align-items: center;
             gap: 15px;
         }
 
-        .navbar-links a {
-            color: #fff;
-            text-decoration: none;
-            font-size: 18px;
+        .logo-badge {
+            width: 45px;
+            height: 45px;
+            background: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3em;
+            border: 2px solid #000000;
         }
 
-        .navbar-links a:hover {
-            text-decoration: underline;
-        }
-
-        /* Dashboard Container */
-        .dashboard-container {
-            padding: 20px;
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
+        /* Messages */
+        .messages {
             margin-bottom: 20px;
         }
 
-        /* Search Bar Styles */
+        .message {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+            border: 3px solid;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-color: #10b981;
+        }
+
+        .message.warning {
+            background: #fef3c7;
+            color: #92400e;
+            border-color: #f59e0b;
+        }
+
+        /* Page header */
+        .page-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border-radius: 20px;
+            padding: 35px 40px;
+            margin-bottom: 30px;
+            border: 3px solid #000000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3em;
+            color: #000000;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            position: relative;
+            display: inline-block;
+        }
+
+        .page-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #ef4444, transparent);
+        }
+
+        /* Search bar */
         .search-bar {
-            text-align: center;
-            margin-bottom: 20px;
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .search-bar form {
+            display: flex;
+            gap: 15px;
+            align-items: center;
         }
 
         .search-bar input[type="text"] {
-            padding: 10px;
-            width: 300px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
+            flex: 1;
+            padding: 15px 25px;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+        }
+
+        .search-bar input[type="text"]:focus {
+            outline: none;
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
         }
 
         .search-bar button {
-            padding: 10px 20px;
-            background-color: #007bff;
+            padding: 15px 35px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: white;
-            border: none;
-            border-radius: 5px;
+            border: 3px solid #000000;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 16px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 5px 0 #7f1d1d;
+            transition: all 0.3s ease;
         }
 
         .search-bar button:hover {
-            background-color: #0056b3;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #7f1d1d;
         }
 
-        /* Table Styles */
+        .search-bar button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #7f1d1d;
+        }
+
+        /* User table */
         .user-table {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .user-table table {
             width: 100%;
             border-collapse: collapse;
-            background-color: #fff;
-            margin: 20px 0;
-        }
-
-        .user-table th, .user-table td {
-            padding: 12px;
-            text-align: left;
-            border: 1px solid #ddd;
         }
 
         .user-table th {
-            background-color: #333;
-            color: #fff;
+            background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%);
+            color: #ffffff;
+            padding: 20px 15px;
+            text-align: left;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            border-bottom: 3px solid #ef4444;
         }
 
-        .user-table tr:nth-child(even) {
-            background-color: #f9f9f9;
+        .user-table td {
+            padding: 20px 15px;
+            border-bottom: 2px solid #f0f0f0;
+            font-weight: 500;
         }
 
-        /* Button Styles */
-        form {
-            display: inline;
+        .user-table tr:hover {
+            background: #f9f9f9;
         }
 
-        button[type="submit"] {
-            background-color: #4CAF50;
-            border: none;
-            color: white;
-            padding: 5px 10px;
-            margin: 2px;
+        .user-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* Action buttons */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-buttons button {
+            padding: 10px 20px;
+            border: 3px solid #000000;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 14px;
-            border-radius: 4px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1em;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 0 #666;
         }
 
-        button[type="submit"][name="action"][value="subtract"] {
-            background-color: #d9534f;
+        .action-buttons button[name="action"][value="add"] {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            box-shadow: 0 3px 0 #047857;
         }
 
-        button[type="submit"]:hover {
-            opacity: 0.8;
+        .action-buttons button[name="action"][value="add"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 0 #047857;
         }
 
-        /* Back Button */
+        .action-buttons button[name="action"][value="subtract"] {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 3px 0 #7f1d1d;
+        }
+
+        .action-buttons button[name="action"][value="subtract"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 0 #7f1d1d;
+        }
+
+        .action-buttons button:active {
+            transform: translateY(1px);
+            box-shadow: 0 1px 0 currentColor;
+        }
+
+        /* Tickets badge */
+        .tickets-badge {
+            background: #000000;
+            color: #ef4444;
+            padding: 8px 16px;
+            border-radius: 50px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            letter-spacing: 1px;
+            border: 2px solid #ef4444;
+            display: inline-block;
+        }
+
+        /* Back button */
         .back-button {
+            margin-top: 30px;
             text-align: center;
-            margin-top: 20px;
         }
 
         .back-button a {
-            padding: 10px 20px;
-            background-color: #6c757d;
-            color: white;
+            display: inline-block;
+            padding: 15px 35px;
+            background: #ffffff;
+            color: #000000;
+            border: 3px solid #000000;
+            border-radius: 12px;
             text-decoration: none;
-            border-radius: 5px;
-            font-size: 16px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 5px 0 #000000;
+            transition: all 0.3s ease;
         }
 
         .back-button a:hover {
-            background-color: #5a6268;
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #000000;
+        }
+
+        .back-button a:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #000000;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: #666;
+        }
+
+        .empty-state-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-state-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8em;
+            letter-spacing: 2px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .search-bar form {
+                flex-direction: column;
+            }
+
+            .search-bar button {
+                width: 100%;
+            }
+
+            .user-table {
+                overflow-x: auto;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .action-buttons button {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar">
-        <div class="navbar-brand">QuinielaGalleraDash</div>
-        <ul class="navbar-links">
-            <li><a href="{% url 'accounts:manage_users' %}">Usuarios</a></li>
-        </ul>
-    </nav>
+    <div class="container">
+        <!-- Navbar -->
+        <nav class="navbar">
+            <div class="navbar-brand">
+                <div class="logo-badge">🐓</div>
+                Quiniela Gallera
+            </div>
+        </nav>
 
-    <!-- Messages Section -->
-    {% if messages %}
+        <!-- Messages -->
+        {% if messages %}
         <div class="messages">
             {% for message in messages %}
-                <p class="message {{ message.tags }}">{{ message }}</p>
+            <div class="message {{ message.tags }}">
+                {% if message.tags == 'success' %}✓{% else %}⚠{% endif %}
+                {{ message }}
+            </div>
             {% endfor %}
         </div>
-    {% endif %}
+        {% endif %}
 
-    <!-- Search Bar -->
-    <div class="dashboard-container">
-        <h1>Gestionar Usuarios</h1>
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>👥 Gestionar Usuarios</h1>
+        </div>
+
+        <!-- Search Bar -->
         <div class="search-bar">
             <form method="get" action="{% url 'accounts:manage_users' %}">
-                <input type="text" name="search" placeholder="Buscar ID o Número de Teléfono" value="{{ request.GET.search }}">
+                <input 
+                    type="text" 
+                    name="search" 
+                    placeholder="🔍 Buscar por ID de Usuario o Número de Teléfono..." 
+                    value="{{ request.GET.search }}"
+                >
                 <button type="submit">Buscar</button>
             </form>
         </div>
 
         <!-- Users Table -->
-        <table class="user-table">
-            <thead>
-                <tr>
-                    <th>ID de Usuario</th>
-                    <th>Nombre</th>
-                    <th>Email</th>
-                    <th>Número de Teléfono</th>
-                    <th>Dirección</th>
-                    <th>Tickets de Evento</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user in users %}
+        <div class="user-table">
+            <table>
+                <thead>
                     <tr>
-                        <td>{{ user.user_id }}</td>
+                        <th>ID Usuario</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th>Tickets</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td><strong>{{ user.user_id }}</strong></td>
                         <td>{{ user.nombre }} {{ user.apellido }}</td>
                         <td>{{ user.email }}</td>
                         <td>{{ user.numero_celular }}</td>
                         <td>{{ user.direccion }}</td>
-                        <td>{{ user.event_tickets }}</td>
                         <td>
-                            <!-- Add and Subtract Buttons -->
-                            <form method="post" action="{% url 'accounts:update_tickets' user.user_id %}">
-                                {% csrf_token %}
-                                <button type="submit" name="action" value="add">Añadir</button>
-                            </form>
-                            <form method="post" action="{% url 'accounts:update_tickets' user.user_id %}">
-                                {% csrf_token %}
-                                <button type="submit" name="action" value="subtract">Restar</button>
-                            </form>
+                            <span class="tickets-badge">🎫 {{ user.event_tickets }}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <form method="post" action="{% url 'accounts:update_tickets' user.user_id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" name="action" value="add">
+                                        ➕ Añadir
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'accounts:update_tickets' user.user_id %}" style="display: inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" name="action" value="subtract">
+                                        ➖ Restar
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
-                {% empty %}
+                    {% empty %}
                     <tr>
-                        <td colspan="7">No se encontraron usuarios.</td>
+                        <td colspan="7">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📭</div>
+                                <div class="empty-state-text">No se encontraron usuarios</div>
+                            </div>
+                        </td>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
-    <!-- Back Button -->
-    <div class="back-button">
-        <a href="https://cognitech.pythonanywhere.com/api/accounts/dashboard/">Volver</a>
+        <!-- Back Button -->
+        <div class="back-button">
+            <a href="{% url 'accounts:dashboard' %}">← Volver al Panel</a>
+        </div>
     </div>
 </body>
 </html>

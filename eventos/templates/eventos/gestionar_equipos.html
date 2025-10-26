@@ -1,119 +1,407 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Equipos del Evento</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f4f4f9;
-      margin: 0;
-      padding: 20px;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestionar Equipos | Quiniela Gallera</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .container {
-      max-width: 800px;
-      margin: 0 auto;
-      background-color: #fff;
-      padding: 30px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-    }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+        }
 
-    h1, h2 {
-      color: #2c3e50;
-    }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
 
-    form {
-      margin-bottom: 30px;
-    }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
 
-    .button {
-      display: inline-block;
-      padding: 10px 20px;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      text-decoration: none;
-      font-size: 16px;
-      cursor: pointer;
-    }
+        /* Messages */
+        .messages {
+            margin-bottom: 20px;
+        }
 
-    .current-button {
-      background-color: #2ecc71;
-    }
+        .message {
+            background: #d1fae5;
+            border: 3px solid #10b981;
+            color: #065f46;
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
 
-    .current-button:hover {
-      background-color: #27ae60;
-    }
+        /* Page header */
+        .page-header {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            border: 3px solid #000000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
 
-    .back-button {
-      background-color: #6c757d;
-    }
+        .page-header h1 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3em;
+            color: #000000;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            position: relative;
+            display: inline-block;
+        }
 
-    .back-button:hover {
-      background-color: #5a6268;
-    }
+        .page-header h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #ef4444, transparent);
+        }
 
-    .next-button {
-      background-color: #3498db;
-      margin-left: 10px;
-    }
+        .page-header .subtitle {
+            color: #666;
+            font-size: 1.2em;
+            font-weight: 500;
+            margin-top: 15px;
+        }
 
-    .next-button:hover {
-      background-color: #2980b9;
-    }
+        /* Add team form */
+        .add-team-form {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
 
-    ul {
-      list-style: none;
-      padding: 0;
-    }
+        .add-team-form h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2em;
+            color: #000000;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
 
-    li {
-      padding: 8px 0;
-      border-bottom: 1px solid #ddd;
-    }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
 
-    .messages {
-      background-color: #d4edda;
-      border: 1px solid #c3e6cb;
-      color: #155724;
-      padding: 10px 15px;
-      border-radius: 5px;
-      margin-bottom: 20px;
-    }
-  </style>
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-group label {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            color: #000000;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .form-group input {
+            padding: 15px 20px;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            font-size: 1.1em;
+            font-family: 'Roboto', sans-serif;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #ef4444;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .submit-button {
+            padding: 15px 35px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            box-shadow: 0 5px 0 #047857;
+            transition: all 0.3s ease;
+        }
+
+        .submit-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #047857;
+        }
+
+        .submit-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 #047857;
+        }
+
+        /* Teams list */
+        .teams-section {
+            background: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .teams-section h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5em;
+            color: #000000;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 25px;
+        }
+
+        .teams-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .team-card {
+            background: #f9f9f9;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .team-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 5px;
+            background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .team-card:hover {
+            transform: translateX(5px);
+            box-shadow: -5px 0 0 #ef4444, 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .team-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5em;
+            color: #ef4444;
+            margin-bottom: 5px;
+        }
+
+        .team-name {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #000000;
+        }
+
+        .empty-teams {
+            text-align: center;
+            padding: 60px 40px;
+            color: #666;
+        }
+
+        .empty-teams-icon {
+            font-size: 5em;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .empty-teams-text {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8em;
+            letter-spacing: 2px;
+        }
+
+        /* Navigation buttons */
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .nav-button {
+            padding: 15px 35px;
+            border: 3px solid #000000;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2em;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-decoration: none;
+            display: inline-block;
+            box-shadow: 0 5px 0 #666;
+            transition: all 0.3s ease;
+        }
+
+        .nav-button.back {
+            background: #ffffff;
+            color: #000000;
+            box-shadow: 0 5px 0 #000000;
+        }
+
+        .nav-button.back:hover {
+            background: #000000;
+            color: #ffffff;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #000000;
+        }
+
+        .nav-button.next {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            box-shadow: 0 5px 0 #7f1d1d;
+        }
+
+        .nav-button.next:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 0 #7f1d1d;
+        }
+
+        .nav-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 currentColor;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .teams-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-buttons {
+                flex-direction: column;
+            }
+
+            .nav-button {
+                width: 100%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="container">
-    {% if messages %}
-      <div class="messages">
-        {% for message in messages %}
-          <p>{{ message }}</p>
-        {% endfor %}
-      </div>
-    {% endif %}
+    <div class="container">
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="message">
+                ✓ {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
-    <h1>Equipos para: {{ evento.nombre }}</h1>
+        <!-- Page Header -->
+        <div class="page-header">
+            <h1>🏅 Gestionar Equipos</h1>
+            <div class="subtitle">Evento: <strong>{{ evento.nombre }}</strong></div>
+        </div>
 
-    <form method="post">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button type="submit" class="button current-button">Agregar Equipo</button>
-    </form>
+        <!-- Add Team Form -->
+        <div class="add-team-form">
+            <h2>➕ Agregar Nuevo Equipo</h2>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="{{ form.nombre.id_for_label }}">Nombre del Equipo:</label>
+                        {{ form.nombre }}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.valor.id_for_label }}">Número (Valor):</label>
+                        {{ form.valor }}
+                    </div>
+                    <button type="submit" class="submit-button">
+                        ✓ Agregar
+                    </button>
+                </div>
+            </form>
+        </div>
 
-    <h2>Equipos Inscritos:</h2>
-    <ul>
-      {% for equipo in equipos %}
-        <li><strong>#{{ equipo.valor }}</strong> - {{ equipo.nombre }}</li>
-      {% empty %}
-        <li>No hay equipos aún.</li>
-      {% endfor %}
-    </ul>
+        <!-- Teams List -->
+        <div class="teams-section">
+            <h2>🎯 Equipos Inscritos:</h2>
+            {% if equipos %}
+            <div class="teams-grid">
+                {% for equipo in equipos %}
+                <div class="team-card">
+                    <div class="team-number">#{{ equipo.valor }}</div>
+                    <div class="team-name">{{ equipo.nombre }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-teams">
+                <div class="empty-teams-icon">📭</div>
+                <div class="empty-teams-text">No hay equipos inscritos aún</div>
+            </div>
+            {% endif %}
+        </div>
 
-    <a href="{% url 'listar_eventos' %}" class="button back-button">Volver a Eventos</a>
-    <a href="{% url 'crear_rondas' evento.id %}" class="button next-button">Continuar a Rondas</a>
-  </div>
+        <!-- Navigation Buttons -->
+        <div class="nav-buttons">
+            <a href="{% url 'listar_eventos' %}" class="nav-button back">
+                ← Volver a Eventos
+            </a>
+            <a href="{% url 'crear_rondas' evento.id %}" class="nav-button next">
+                Continuar a Rondas →
+            </a>
+        </div>
+    </div>
 </body>
 </html>
