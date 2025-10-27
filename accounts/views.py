@@ -14,7 +14,11 @@ from django.shortcuts import redirect
 from django.middleware.csrf import get_token
 from django.db.models import Q
 import json
+from eventos.models import Evento, EventoUserResult
+from django.db import transaction
+import logging
 
+logger = logging.getLogger('accounts')
 
 @api_view(['POST'])
 def register_user(request):
@@ -101,39 +105,57 @@ def get_user_tickets(request):
 
 @csrf_exempt
 def use_ticket(request):
+    """
+    Use a ticket to participate in an event.
+    This creates the participation record (EventoUserResult).
+    User can then submit/update predictions unlimited times.
+    """
     if request.method == 'POST':
         try:
-            # Parse request data
             data = json.loads(request.body)
             user_id = data.get('user_id')
             event_id = data.get('event_id')
 
-            # Validate data
-            if not user_id or not event_id:
-                return JsonResponse({'error': 'Missing user_id or event_id'}, status=400)
+            if not all([user_id, event_id]):
+                return JsonResponse({'error': 'Datos incompletos'}, status=400)
 
-            # Fetch user
-            user = CustomUser.objects.filter(user_id=user_id).first()
-            if not user:
-                return JsonResponse({'error': 'User not found'}, status=404)
+            user = CustomUser.objects.get(user_id=user_id)
+            evento = Evento.objects.get(id=event_id, current=True)
 
-            # Check ticket availability
-            if user.event_tickets <= 0:
-                return JsonResponse({'error': 'Insufficient tickets'}, status=400)
+            # Check if user has tickets
+            if user.event_tickets < 1:
+                return JsonResponse({'error': 'No tienes tickets disponibles'}, status=400)
 
-            # Deduct ticket and save
-            user.event_tickets -= 1
-            user.save()
+            # Check if already participated
+            if EventoUserResult.objects.filter(user=user, evento=evento).exists():
+                return JsonResponse({'error': 'Ya has participado en este evento'}, status=400)
 
-            # Return success response
-            return JsonResponse({'message': 'Ticket successfully used'}, status=200)
+            # Use ticket and create participation
+            with transaction.atomic():
+                user.event_tickets -= 1
+                user.save()
 
+                EventoUserResult.objects.create(
+                    user=user,
+                    evento=evento,
+                    total_points=0
+                )
+
+            return JsonResponse({
+                'success': True,
+                'message': 'Ticket usado exitosamente',
+                'remaining_tickets': user.event_tickets
+            }, status=200)
+
+        except CustomUser.DoesNotExist:
+            return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+        except Evento.DoesNotExist:
+            return JsonResponse({'error': 'Evento no encontrado o no está activo'}, status=404)
         except Exception as e:
-            # Log the error and return a 500 response
-            print(f"Error processing ticket use: {str(e)}")
-            return JsonResponse({'error': 'Internal server error', 'details': str(e)}, status=500)
+            logger.error(f"Error using ticket: {str(e)}")
+            return JsonResponse({'error': str(e)}, status=400)
 
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+    return JsonResponse({'error': 'Método inválido'}, status=405)
 
 def csrf_token_view(request):
     return JsonResponse({'csrfToken': get_token(request)})
@@ -154,3 +176,4 @@ def delete_user(request, user_id):
         return redirect('accounts:manage_users')
 
     return redirect('accounts:manage_users')
+

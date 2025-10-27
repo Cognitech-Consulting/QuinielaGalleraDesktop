@@ -22,4 +22,5 @@ urlpatterns = [
     path('api/evento/<int:evento_id>/equipo-nombre/', views.obtener_nombre_equipo, name='obtener_nombre_equipo'),
     path('api/equipo-nombre/', views.buscar_equipo_global, name='buscar_equipo_global'),
     path('eventos/<int:evento_id>/crear-rondas/', views.crear_rondas, name='crear_rondas'),
+    path('api/has-submitted-predictions/', views.has_user_submitted_predictions, name='has-submitted-predictions'),
 ]

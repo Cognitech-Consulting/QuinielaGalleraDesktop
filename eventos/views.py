@@ -48,7 +48,7 @@ def detalle_evento(request, evento_id):
 def crear_evento(request):
     """
     UNIFIED event creation view - handles event, teams, and fights in ONE request.
-    NO redirects, NO separate pages, everything on one page!
+    NOW SUPPORTS MULTIPLE ROUNDS!
     """
     if request.method == 'POST':
         try:
@@ -93,33 +93,45 @@ def crear_evento(request):
                     )
                     team_map[team_data['number']] = team_data['name']
 
-                # 3. Create ONE default round
-                ronda = Ronda.objects.create(
-                    evento=evento,
-                    numero=1
-                )
-
-                # 4. Create Fights
+                # 3. Group fights by round number
+                fights_by_round = {}
                 for fight_data in fights_data:
-                    team1_number = fight_data['team1']
-                    team2_number = fight_data['team2']
+                    round_num = fight_data.get('round_number', 1)  # Default to round 1 if not specified
+                    if round_num not in fights_by_round:
+                        fights_by_round[round_num] = []
+                    fights_by_round[round_num].append(fight_data)
 
-                    # Get team names from map
-                    equipo1_nombre = team_map.get(team1_number)
-                    equipo2_nombre = team_map.get(team2_number)
-
-                    if not equipo1_nombre or not equipo2_nombre:
-                        raise ValueError(f"Invalid team numbers in fight {fight_data['numero_pelea']}")
-
-                    # Create fight
-                    Pelea.objects.create(
-                        ronda=ronda,
-                        equipo1=equipo1_nombre,
-                        equipo2=equipo2_nombre
+                # 4. Create rounds and their fights
+                total_fights_created = 0
+                for round_num in sorted(fights_by_round.keys()):
+                    # Create the round
+                    ronda = Ronda.objects.create(
+                        evento=evento,
+                        numero=round_num
                     )
 
+                    # Create all fights for this round
+                    for fight_data in fights_by_round[round_num]:
+                        team1_number = fight_data['team1']
+                        team2_number = fight_data['team2']
+
+                        # Get team names from map
+                        equipo1_nombre = team_map.get(team1_number)
+                        equipo2_nombre = team_map.get(team2_number)
+
+                        if not equipo1_nombre or not equipo2_nombre:
+                            raise ValueError(f"Invalid team numbers in fight")
+
+                        # Create fight
+                        Pelea.objects.create(
+                            ronda=ronda,
+                            equipo1=equipo1_nombre,
+                            equipo2=equipo2_nombre
+                        )
+                        total_fights_created += 1
+
                 # Success!
-                messages.success(request, f'✅ Evento "{nombre}" creado exitosamente con {len(teams_data)} equipos y {len(fights_data)} peleas!')
+                messages.success(request, f'✅ Evento "{nombre}" creado exitosamente con {len(teams_data)} equipos, {len(fights_by_round)} rondas y {total_fights_created} peleas!')
                 return redirect('detalle_evento', evento_id=evento.id)
 
         except json.JSONDecodeError:
@@ -134,7 +146,6 @@ def crear_evento(request):
 
     # GET request - show the form
     return render(request, 'eventos/crear_evento.html')
-
 
 @login_required
 def crear_rondas(request, evento_id):
@@ -371,6 +382,11 @@ def update_result(request, pelea_id):
 
 @csrf_exempt
 def submit_predictions(request):
+    """
+    Submit predictions for an event - ONE TIME ONLY.
+    User must have participated but NOT yet submitted predictions.
+    Once submitted, predictions are LOCKED and cannot be changed.
+    """
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -378,61 +394,139 @@ def submit_predictions(request):
             event_id = data.get('event_id')
             predictions_data = data.get('predictions', [])
 
-            if not all([user_id, event_id, predictions_data]):
+            # Validate input
+            if not all([user_id, event_id]):
                 return JsonResponse({'error': 'Datos incompletos'}, status=400)
 
+            if not predictions_data or not isinstance(predictions_data, list):
+                return JsonResponse({'error': 'Debe enviar al menos una predicción'}, status=400)
+
+            # Get user and event
             user = CustomUser.objects.get(user_id=user_id)
-            evento = Evento.objects.get(id=event_id)
+            evento = Evento.objects.get(id=event_id, current=True)
 
-            # Check if user already participated
-            if EventoUserResult.objects.filter(user=user, evento=evento).exists():
-                return JsonResponse({'error': 'Ya has participado en este evento'}, status=400)
+            # Check if user has PARTICIPATED
+            participation = EventoUserResult.objects.filter(
+                user=user,
+                evento=evento
+            ).first()
 
-            # Check if user has tickets
-            if user.event_tickets < 1:
-                return JsonResponse({'error': 'No tienes boletos disponibles'}, status=400)
+            if not participation:
+                return JsonResponse({
+                    'error': 'Debes participar en el evento primero. Usa un ticket para participar.'
+                }, status=403)
 
+            # CRITICAL: Check if user has ALREADY SUBMITTED predictions
+            # User can only submit ONCE per event
+            existing_predictions = Prediccion.objects.filter(
+                user=user,
+                pelea__ronda__evento=evento
+            ).exists()
+
+            if existing_predictions:
+                return JsonResponse({
+                    'error': 'Ya has enviado tus predicciones para este evento. No puedes modificarlas.'
+                }, status=400)
+
+            # User hasn't submitted yet - save predictions (ONE TIME ONLY)
+            saved_count = 0
             with transaction.atomic():
-                # Deduct one ticket
-                user.event_tickets -= 1
-                user.save()
-
-                # Create predictions
                 for pred_data in predictions_data:
                     pelea_id = pred_data.get('pelea_id')
                     prediccion = pred_data.get('prediccion')
 
-                    pelea = Pelea.objects.get(id=pelea_id)
-                    Prediccion.objects.update_or_create(
-                        user=user,
-                        pelea=pelea,
-                        defaults={'prediccion': prediccion}
-                    )
+                    # Validate prediction
+                    if prediccion not in ['equipo1', 'equipo2', 'empate']:
+                        continue
 
-                # Create EventoUserResult entry
-                EventoUserResult.objects.create(
+                    try:
+                        pelea = Pelea.objects.get(id=pelea_id, ronda__evento=evento)
+
+                        # Create prediction (not update - first time only!)
+                        Prediccion.objects.create(
+                            user=user,
+                            pelea=pelea,
+                            prediccion=prediccion
+                        )
+                        saved_count += 1
+                    except Pelea.DoesNotExist:
+                        continue
+
+                # Calculate total points based on current results
+                total_points = 0
+                user_predictions = Prediccion.objects.filter(
                     user=user,
-                    evento=evento,
-                    total_points=0
+                    pelea__ronda__evento=evento
                 )
+
+                for pred in user_predictions:
+                    if pred.pelea.resultado:
+                        if pred.prediccion == 'equipo1' and pred.pelea.resultado == pred.pelea.equipo1:
+                            total_points += 1
+                        elif pred.prediccion == 'equipo2' and pred.pelea.resultado == pred.pelea.equipo2:
+                            total_points += 1
+                        elif pred.prediccion == 'empate' and pred.pelea.resultado == 'tie':
+                            total_points += 1
+
+                # Update participation points
+                participation.total_points = total_points
+                participation.save()
 
             return JsonResponse({
                 'success': True,
-                'message': 'Predicciones guardadas exitosamente',
-                'tickets_remaining': user.event_tickets
+                'message': f'{saved_count} predicciones guardadas exitosamente',
+                'total_points': total_points,
+                'predictions_saved': saved_count
             }, status=200)
 
         except CustomUser.DoesNotExist:
             return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
         except Evento.DoesNotExist:
-            return JsonResponse({'error': 'Evento no encontrado'}, status=404)
-        except Pelea.DoesNotExist:
-            return JsonResponse({'error': 'Pelea no encontrada'}, status=404)
+            return JsonResponse({'error': 'Evento no encontrado o no está activo'}, status=404)
         except Exception as e:
             logger.error(f"Error submitting predictions: {str(e)}")
             return JsonResponse({'error': str(e)}, status=400)
 
     return JsonResponse({'error': 'Método inválido'}, status=405)
+
+
+
+
+@csrf_exempt
+def check_participation(request):
+    """Check if a user has already participated in an event"""
+    try:
+        user_id = request.GET.get('user_id')
+        event_id = request.GET.get('event_id')
+
+        if not user_id or not event_id:
+            return JsonResponse({'error': 'Faltan parámetros'}, status=400)
+
+        user = CustomUser.objects.get(user_id=user_id)
+        evento = Evento.objects.get(id=event_id)
+
+        # Check if user has participated (has EventoUserResult record)
+        participated = EventoUserResult.objects.filter(
+            user=user,
+            evento=evento
+        ).exists()
+
+        return JsonResponse({
+            'participated': participated,  # Changed from 'has_participated'
+            'event_id': evento.id,
+            'event_name': evento.nombre,
+            'tickets_available': user.event_tickets
+        }, status=200)
+
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+    except Evento.DoesNotExist:
+        return JsonResponse({'error': 'Evento no encontrado'}, status=404)
+    except Exception as e:
+        logger.error(f"Error checking participation: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
 
 
 @csrf_exempt
@@ -698,39 +792,6 @@ def get_current_event(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 
-@csrf_exempt
-def check_participation(request):
-    """Check if a user has already participated in the current event"""
-    try:
-        user_id = request.GET.get('user_id')
-
-        if not user_id:
-            return JsonResponse({'error': 'Falta user_id'}, status=400)
-
-        user = CustomUser.objects.get(user_id=user_id)
-        current_event = Evento.objects.get(current=True)
-
-        # Check if user has already submitted predictions for this event
-        has_participated = EventoUserResult.objects.filter(
-            user=user,
-            evento=current_event
-        ).exists()
-
-        return JsonResponse({
-            'has_participated': has_participated,
-            'event_id': current_event.id,
-            'event_name': current_event.nombre,
-            'tickets_available': user.event_tickets
-        }, status=200)
-
-    except CustomUser.DoesNotExist:
-        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
-    except Evento.DoesNotExist:
-        return JsonResponse({'error': 'No hay evento activo'}, status=404)
-    except Exception as e:
-        logger.error(f"Error checking participation: {str(e)}")
-        return JsonResponse({'error': str(e)}, status=500)
-
 
 @login_required
 def toggle_event_status(request, evento_id):
@@ -783,3 +844,40 @@ def delete_event(request, evento_id):
         return redirect('listar_eventos')
 
     return redirect('listar_eventos')
+
+
+@csrf_exempt
+def has_user_submitted_predictions(request):
+    """
+    Check if a user has already submitted predictions for an event.
+    Returns true if predictions exist, false otherwise.
+    """
+    try:
+        user_id = request.GET.get('user_id')
+        event_id = request.GET.get('event_id')
+
+        if not user_id or not event_id:
+            return JsonResponse({'error': 'Faltan parámetros'}, status=400)
+
+        user = CustomUser.objects.get(user_id=user_id)
+        evento = Evento.objects.get(id=event_id)
+
+        # Check if user has any predictions for this event
+        has_predictions = Prediccion.objects.filter(
+            user=user,
+            pelea__ronda__evento=evento
+        ).exists()
+
+        return JsonResponse({
+            'has_submitted': has_predictions,
+            'event_id': evento.id,
+            'event_name': evento.nombre
+        }, status=200)
+
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'error': 'Usuario no encontrado'}, status=404)
+    except Evento.DoesNotExist:
+        return JsonResponse({'error': 'Evento no encontrado'}, status=404)
+    except Exception as e:
+        logger.error(f"Error checking predictions: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)

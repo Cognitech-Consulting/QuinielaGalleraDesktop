@@ -28,7 +28,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: 
+            background:
                 radial-gradient(circle at 20% 80%, rgba(239, 68, 68, 0.15) 0%, transparent 50%),
                 radial-gradient(circle at 80% 20%, rgba(220, 38, 38, 0.1) 0%, transparent 50%);
             pointer-events: none;
@@ -590,10 +590,10 @@
             <!-- STEP 1: Event Info -->
             <div class="content-section" id="step1">
                 <h2 class="section-title">📋 Información del Evento</h2>
-                
+
                 <div class="form-group">
                     <label class="form-label">Nombre del Evento</label>
-                    <input type="text" name="nombre" class="form-input" required 
+                    <input type="text" name="nombre" class="form-input" required
                            placeholder="Ej: Copa Gallera 2025">
                 </div>
 
@@ -604,7 +604,7 @@
 
                 <div class="form-group">
                     <label class="form-label">Ubicación</label>
-                    <input type="text" name="ubicacion" class="form-input" required 
+                    <input type="text" name="ubicacion" class="form-input" required
                            placeholder="Ej: Palenque Central">
                 </div>
 
@@ -616,15 +616,15 @@
             <!-- STEP 2: Team Registration -->
             <div class="content-section hidden" id="step2">
                 <h2 class="section-title">🐓 Registrar Equipos</h2>
-                
+
                 <div class="message warning">
                     ⚠️ Registra todos los equipos que participarán en el evento. Luego podrás usarlos para crear las peleas.
                 </div>
 
                 <div class="team-input-row">
-                    <input type="text" id="teamNumber" class="team-number-input" 
+                    <input type="text" id="teamNumber" class="team-number-input"
                            placeholder="#" pattern="[0-9]+" maxlength="3">
-                    <input type="text" id="teamName" class="form-input" 
+                    <input type="text" id="teamName" class="form-input"
                            placeholder="Nombre del equipo">
                     <button type="button" class="add-team-btn" onclick="addTeam()">
                         ➕ Agregar
@@ -645,7 +645,7 @@
             <!-- STEP 3: Create Fights -->
             <div class="content-section hidden" id="step3">
                 <h2 class="section-title">⚔️ Crear Peleas</h2>
-                
+
                 <div class="message warning">
                     💡 Ingresa los números de equipo para cada pelea. Los nombres aparecerán automáticamente.
                 </div>
@@ -758,7 +758,7 @@
 
         function updateTeamsList() {
             const container = document.getElementById('teamsList');
-            
+
             if (teams.length === 0) {
                 container.innerHTML = '<div class="message warning">No hay equipos registrados aún</div>';
                 return;
@@ -781,12 +781,13 @@
         function addFight() {
             fightCounter++;
             const fightId = `fight-${fightCounter}`;
-            
+
             fights.push({
                 id: fightId,
                 team1: '',
                 team2: '',
-                numero_pelea: fightCounter
+                numero_pelea: fightCounter,
+                round_number: 1  // ADD THIS LINE - default to round 1
             });
 
             const container = document.getElementById('fightsContainer');
@@ -794,14 +795,22 @@
                 <div class="fight-card" id="${fightId}">
                     <div class="fight-header">
                         <div class="fight-number">PELEA #${fightCounter}</div>
-                        <button type="button" class="remove-fight-btn" onclick="removeFight('${fightId}')">
-                            ✕ Eliminar
-                        </button>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <label style="margin: 0; font-size: 0.9em;">Ronda:</label>
+                            <input type="number"
+                                   min="1"
+                                   value="1"
+                                   style="width: 70px; padding: 8px; border: 2px solid #000; border-radius: 8px; font-weight: 900; text-align: center;"
+                                   onchange="updateFightRound('${fightId}', this.value)">
+                            <button type="button" class="remove-fight-btn" onclick="removeFight('${fightId}')">
+                                ✕ Eliminar
+                            </button>
+                        </div>
                     </div>
                     <div class="fight-teams">
                         <div class="fight-team">
-                            <input type="text" class="fight-team-input" 
-                                   placeholder="#" 
+                            <input type="text" class="fight-team-input"
+                                   placeholder="#"
                                    onkeyup="updateFightPreview('${fightId}', 1, this.value)"
                                    pattern="[0-9]+" maxlength="3">
                             <div class="team-preview empty" id="${fightId}-team1-preview">
@@ -810,7 +819,7 @@
                         </div>
                         <div class="vs-badge">VS</div>
                         <div class="fight-team">
-                            <input type="text" class="fight-team-input" 
+                            <input type="text" class="fight-team-input"
                                    placeholder="#"
                                    onkeyup="updateFightPreview('${fightId}', 2, this.value)"
                                    pattern="[0-9]+" maxlength="3">
@@ -851,6 +860,13 @@
             } else {
                 preview.className = 'team-preview invalid';
                 preview.textContent = `⚠️ Equipo #${value} no registrado`;
+            }
+        }
+
+        function updateFightRound(fightId, roundNumber) {
+            const fight = fights.find(f => f.id === fightId);
+            if (fight) {
+                fight.round_number = parseInt(roundNumber) || 1;
             }
         }
 
