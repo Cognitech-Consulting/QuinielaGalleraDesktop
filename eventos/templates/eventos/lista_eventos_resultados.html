@@ -1,0 +1,265 @@
+<!-- templates/eventos/lista_eventos_resultados.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados por Evento - Quiniela Gallera</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d0a0e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #D52B1E 0%, #8B0000 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(213, 43, 30, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .back-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .event-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s;
+            border-left: 5px solid #D52B1E;
+        }
+
+        .event-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .event-card.active {
+            border-left-color: #00FF00;
+            background: linear-gradient(135deg, #f0fff0 0%, white 100%);
+        }
+
+        .event-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 15px;
+        }
+
+        .event-info {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .event-info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+            color: #666;
+        }
+
+        .event-info-item .icon {
+            font-size: 1.2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 10px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #D52B1E;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .view-button {
+            display: block;
+            width: 100%;
+            background: linear-gradient(135deg, #D52B1E 0%, #8B0000 100%);
+            color: white;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .view-button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(213, 43, 30, 0.4);
+        }
+
+        .no-events {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .no-events .icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        .no-events h2 {
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .no-events p {
+            color: #666;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+
+        .badge-active {
+            background: #00FF00;
+            color: #1a1a1a;
+        }
+
+        .badge-inactive {
+            background: #999;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Volver al Dashboard</a>
+        
+        <div class="header">
+            <h1>
+                📊 Resultados por Evento
+            </h1>
+            <p>Visualiza todos los resultados y predicciones de cada participante</p>
+        </div>
+
+        {% if eventos %}
+        <div class="events-grid">
+            {% for evento in eventos %}
+            <div class="event-card {% if evento.current %}active{% endif %}">
+                <div class="event-name">
+                    {{ evento.nombre }}
+                    {% if evento.current %}
+                    <span class="badge badge-active">ACTIVO</span>
+                    {% else %}
+                    <span class="badge badge-inactive">Finalizado</span>
+                    {% endif %}
+                </div>
+                
+                <div class="event-info">
+                    <div class="event-info-item">
+                        <span class="icon">📅</span>
+                        <span>{{ evento.fecha }}</span>
+                    </div>
+                    <div class="event-info-item">
+                        <span class="icon">📍</span>
+                        <span>{{ evento.ubicacion }}</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat">
+                        <div class="stat-value">{{ evento.num_participantes }}</div>
+                        <div class="stat-label">Participantes</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">{{ evento.total_peleas }}</div>
+                        <div class="stat-label">Peleas</div>
+                    </div>
+                </div>
+
+                <a href="{% url 'ver_resultados_evento' evento.id %}" class="view-button">
+                    Ver Resultados Detallados →
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-events">
+            <div class="icon">📭</div>
+            <h2>No hay eventos disponibles</h2>
+            <p>Crea un evento para ver los resultados aquí</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

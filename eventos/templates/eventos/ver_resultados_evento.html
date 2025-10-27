@@ -1,0 +1,449 @@
+<!-- templates/eventos/ver_resultados_evento.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados - {{ evento.nombre }} - Quiniela Gallera</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d0a0e 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #D52B1E 0%, #8B0000 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(213, 43, 30, 0.3);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .event-details {
+            display: flex;
+            gap: 30px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .event-detail-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-link {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .back-link:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-5px);
+        }
+
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #D52B1E;
+            margin-bottom: 5px;
+        }
+
+        .stat-card .label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .user-results-section {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #f0f0f0;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #D52B1E 0%, #8B0000 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .user-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+
+        .user-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .user-stat {
+            text-align: center;
+        }
+
+        .user-stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #D52B1E;
+        }
+
+        .user-stat-label {
+            font-size: 0.8rem;
+            color: #666;
+        }
+
+        .predictions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .prediction-card {
+            background: #f8f8f8;
+            border-radius: 12px;
+            padding: 15px;
+            border-left: 4px solid #ddd;
+        }
+
+        .prediction-card.correct {
+            border-left-color: #2ECC71;
+            background: linear-gradient(135deg, #e8f5e9 0%, #f8f8f8 100%);
+        }
+
+        .prediction-card.incorrect {
+            border-left-color: #E74C3C;
+            background: linear-gradient(135deg, #ffebee 0%, #f8f8f8 100%);
+        }
+
+        .prediction-card.pending {
+            border-left-color: #FFC107;
+            background: linear-gradient(135deg, #fff8e1 0%, #f8f8f8 100%);
+        }
+
+        .prediction-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .prediction-title {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .prediction-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-correct {
+            background: #2ECC71;
+            color: white;
+        }
+
+        .badge-incorrect {
+            background: #E74C3C;
+            color: white;
+        }
+
+        .badge-pending {
+            background: #FFC107;
+            color: #1a1a1a;
+        }
+
+        .match-info {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+
+        .prediction-details {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .prediction-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prediction-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .prediction-value {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #1a1a1a;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            background: white;
+            border-radius: 15px;
+        }
+
+        .no-results .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .accuracy-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #2ECC71 0%, #27AE60 100%);
+            transition: width 0.3s;
+        }
+
+        .export-button {
+            background: linear-gradient(135deg, #2ECC71 0%, #27AE60 100%);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .export-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.4);
+        }
+
+        @media print {
+            body {
+                background: white;
+            }
+            .back-link, .export-button {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="{% url 'lista_eventos_resultados' %}" class="back-link">← Volver a Lista de Eventos</a>
+        <button onclick="window.print()" class="export-button">🖨️ Imprimir / Exportar PDF</button>
+        
+        <div class="header">
+            <h1>🏆 {{ evento.nombre }}</h1>
+            <div class="event-details">
+                <div class="event-detail-item">
+                    <span>📅</span>
+                    <span>{{ evento.fecha }}</span>
+                </div>
+                <div class="event-detail-item">
+                    <span>📍</span>
+                    <span>{{ evento.ubicacion }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-overview">
+            <div class="stat-card">
+                <div class="icon">👥</div>
+                <div class="value">{{ total_participantes }}</div>
+                <div class="label">Participantes</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">⚔️</div>
+                <div class="value">{{ total_peleas }}</div>
+                <div class="label">Total Peleas</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">✅</div>
+                <div class="value">{{ peleas_resueltas }}</div>
+                <div class="label">Peleas Resueltas</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">⏳</div>
+                <div class="value">{{ peleas_pendientes }}</div>
+                <div class="label">Peleas Pendientes</div>
+            </div>
+        </div>
+
+        {% if resultados_usuarios %}
+            {% for resultado in resultados_usuarios %}
+            <div class="user-results-section">
+                <div class="user-header">
+                    <div class="user-info">
+                        <div class="user-avatar">👤</div>
+                        <div>
+                            <div class="user-name">{{ resultado.user.user_id }}</div>
+                            <div class="accuracy-bar">
+                                <div class="accuracy-fill" style="width: {{ resultado.precision }}%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="user-stats">
+                        <div class="user-stat">
+                            <div class="user-stat-value">{{ resultado.total_points }}</div>
+                            <div class="user-stat-label">Puntos</div>
+                        </div>
+                        <div class="user-stat">
+                            <div class="user-stat-value">{{ resultado.precision }}%</div>
+                            <div class="user-stat-label">Precisión</div>
+                        </div>
+                        <div class="user-stat">
+                            <div class="user-stat-value" style="color: #2ECC71;">{{ resultado.correctas }}</div>
+                            <div class="user-stat-label">Correctas</div>
+                        </div>
+                        <div class="user-stat">
+                            <div class="user-stat-value" style="color: #E74C3C;">{{ resultado.incorrectas }}</div>
+                            <div class="user-stat-label">Incorrectas</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="predictions-grid">
+                    {% for pred in resultado.predicciones %}
+                    <div class="prediction-card {% if pred.es_correcta == True %}correct{% elif pred.es_correcta == False %}incorrect{% else %}pending{% endif %}">
+                        <div class="prediction-header">
+                            <span class="prediction-title">Ronda {{ pred.pelea.ronda.numero }} - Pelea</span>
+                            <span class="prediction-badge {% if pred.es_correcta == True %}badge-correct{% elif pred.es_correcta == False %}badge-incorrect{% else %}badge-pending{% endif %}">
+                                {% if pred.es_correcta == True %}✓ Correcto
+                                {% elif pred.es_correcta == False %}✗ Incorrecto
+                                {% else %}⏳ Pendiente
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="match-info">
+                            {{ pred.pelea.equipo1 }} <span style="color: #D52B1E;">VS</span> {{ pred.pelea.equipo2 }}
+                        </div>
+
+                        <div class="prediction-details">
+                            <div class="prediction-row">
+                                <span class="prediction-label">Predicción:</span>
+                                <span class="prediction-value">
+                                    {% if pred.prediccion == 'equipo1' %}
+                                        {{ pred.pelea.equipo1 }}
+                                    {% elif pred.prediccion == 'equipo2' %}
+                                        {{ pred.pelea.equipo2 }}
+                                    {% else %}
+                                        Empate
+                                    {% endif %}
+                                </span>
+                            </div>
+                            <div class="prediction-row">
+                                <span class="prediction-label">Resultado Real:</span>
+                                <span class="prediction-value" style="color: #D52B1E;">
+                                    {% if pred.resultado_real == 'equipo1' %}
+                                        {{ pred.pelea.equipo1 }}
+                                    {% elif pred.resultado_real == 'equipo2' %}
+                                        {{ pred.pelea.equipo2 }}
+                                    {% elif pred.resultado_real == 'tie' %}
+                                        Empate
+                                    {% else %}
+                                        Pendiente
+                                    {% endif %}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="no-results">
+            <div class="icon">📭</div>
+            <h2>No hay participantes aún</h2>
+            <p>Cuando los usuarios participen en este evento, sus resultados aparecerán aquí</p>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

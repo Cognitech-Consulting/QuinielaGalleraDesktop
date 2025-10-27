@@ -23,4 +23,6 @@ urlpatterns = [
     path('api/equipo-nombre/', views.buscar_equipo_global, name='buscar_equipo_global'),
     path('eventos/<int:evento_id>/crear-rondas/', views.crear_rondas, name='crear_rondas'),
     path('api/has-submitted-predictions/', views.has_user_submitted_predictions, name='has-submitted-predictions'),
+    path('admin/resultados/', views.lista_eventos_resultados, name='lista_eventos_resultados'),
+    path('admin/resultados/<int:event_id>/', views.ver_resultados_evento, name='ver_resultados_evento'),
 ]

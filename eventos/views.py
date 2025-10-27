@@ -1,18 +1,18 @@
+import json
+import logging
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.db import transaction
+from django.db.models import Q, Count, Sum
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.urls import reverse
-from .models import Evento, Ronda, Pelea, Prediccion, NombreEquipo
-from .forms import EventoForm, NombreEquipoForm
-from django.views.decorators.csrf import csrf_exempt
-from accounts.models import CustomUser
-import logging
-import json
-from .models import EventoUserResult
-from django.contrib.auth.decorators import login_required
-from django.db.models import Q
-from django.contrib import messages
-from django.db import transaction
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+
+from accounts.models import CustomUser
+from .forms import EventoForm, NombreEquipoForm
+from .models import Evento, Ronda, Pelea, Prediccion, NombreEquipo, EventoUserResult
 
 logger = logging.getLogger('eventos')
 
@@ -881,3 +881,117 @@ def has_user_submitted_predictions(request):
     except Exception as e:
         logger.error(f"Error checking predictions: {str(e)}")
         return JsonResponse({'error': str(e)}, status=500)
+
+def is_admin(user):
+    """Check if user is admin"""
+    return user.is_staff or user.is_superuser
+
+@user_passes_test(is_admin)
+def ver_resultados_evento(request, event_id):
+    """
+    View all user results for a specific event
+    Shows detailed predictions and scores for each participant
+    """
+    evento = get_object_or_404(Evento, id=event_id)
+
+    # Get all participants for this event
+    participaciones = EventoUserResult.objects.filter(
+        evento=evento
+    ).select_related('user').order_by('-total_points', 'user__user_id')
+
+    # Prepare data for each participant
+    resultados_usuarios = []
+
+    for participacion in participaciones:
+        # Get all predictions for this user in this event
+        predicciones = Prediccion.objects.filter(
+            user=participacion.user,
+            pelea__ronda__evento=evento
+        ).select_related('pelea', 'pelea__ronda').order_by('pelea__ronda__numero', 'pelea__id')
+
+        # Build prediction details
+        predicciones_detalle = []
+        correctas = 0
+        incorrectas = 0
+        pendientes = 0
+
+        for pred in predicciones:
+            pelea = pred.pelea
+
+            # Determine if prediction is correct
+            es_correcta = None
+            if pelea.resultado:
+                if pred.prediccion == 'equipo1' and pelea.resultado == 'equipo1':
+                    es_correcta = True
+                    correctas += 1
+                elif pred.prediccion == 'equipo2' and pelea.resultado == 'equipo2':
+                    es_correcta = True
+                    correctas += 1
+                elif pred.prediccion == 'empate' and pelea.resultado == 'tie':
+                    es_correcta = True
+                    correctas += 1
+                else:
+                    es_correcta = False
+                    incorrectas += 1
+            else:
+                pendientes += 1
+
+            predicciones_detalle.append({
+                'pelea': pelea,
+                'prediccion': pred.prediccion,
+                'es_correcta': es_correcta,
+                'resultado_real': pelea.resultado,
+            })
+
+        # Calculate accuracy
+        total_con_resultado = correctas + incorrectas
+        precision = (correctas / total_con_resultado * 100) if total_con_resultado > 0 else 0
+
+        resultados_usuarios.append({
+            'user': participacion.user,
+            'total_points': participacion.total_points,
+            'predicciones': predicciones_detalle,
+            'correctas': correctas,
+            'incorrectas': incorrectas,
+            'pendientes': pendientes,
+            'precision': round(precision, 1),
+            'total_predicciones': len(predicciones_detalle),
+        })
+
+    # Get event statistics
+    total_participantes = participaciones.count()
+    total_peleas = Pelea.objects.filter(ronda__evento=evento).count()
+    peleas_resueltas = Pelea.objects.filter(
+        ronda__evento=evento
+    ).exclude(resultado__isnull=True).exclude(resultado='').count()
+
+    context = {
+        'evento': evento,
+        'resultados_usuarios': resultados_usuarios,
+        'total_participantes': total_participantes,
+        'total_peleas': total_peleas,
+        'peleas_resueltas': peleas_resueltas,
+        'peleas_pendientes': total_peleas - peleas_resueltas,
+    }
+
+    return render(request, 'eventos/ver_resultados_evento.html', context)
+
+
+@user_passes_test(is_admin)
+def lista_eventos_resultados(request):
+    """
+    List all events with quick access to view results
+    """
+    eventos = Evento.objects.annotate(
+        num_participantes=Count('eventouserresult'),
+        total_peleas=Count('ronda__pelea')
+    ).order_by('-fecha', '-id')
+
+    context = {
+        'eventos': eventos,
+    }
+
+    return render(request, 'eventos/lista_eventos_resultados.html', context)
+
+
+
